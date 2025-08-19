@@ -25,7 +25,7 @@ namespace ZAsset
         {
             if(_disposed) return;
             _disposed = true;
-            
+            ResManager.Instance.Release(_address);
         }
     }
 

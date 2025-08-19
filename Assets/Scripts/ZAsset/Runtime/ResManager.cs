@@ -2,8 +2,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Threading.Tasks;
 using UnityEngine;
+using Cysharp.Threading.Tasks;
 
 namespace ZAsset
 {
@@ -37,7 +37,7 @@ namespace ZAsset
         private readonly Dictionary<string, int> _addressRef = new Dictionary<string, int>();
 
         //bundleName -> task 异步等待
-        private readonly Dictionary<string, Task<AssetBundle>> _loadingTasks = new Dictionary<string, Task<AssetBundle>>();
+        private readonly Dictionary<string, UniTask<AssetBundle>> _loadingTasks = new Dictionary<string, UniTask<AssetBundle>>();
 
 
         private void Awake()
@@ -69,20 +69,20 @@ namespace ZAsset
         }
 
         #region 初始化
-        public async Task InitAsync(string manifestBundleName = "StandaloneWindows64")
+        public async UniTask InitAsync(string manifestBundleName = "AssetBundles")
         {
             // 注意：manifestBundleName 应与打包平台一致。Editor Builder 会把主 bundle 命名为目标平台名。
             var bundlePath = Path.Combine(_abRoot, manifestBundleName);
             _manifestBundle = await LoadBundleInternalAsync(manifestBundleName, bundlePath);
             _manifest = _manifestBundle.LoadAsset<AssetBundleManifest>("AssetBundleManifest");
             if (_manifest == null)
-                Debug.LogError("AssetBundleManifest not found. Check your build output.");
+                Debug.LogError("AssetBundleManifest没有找到");
 
             // 构建AddressMap 索引
             if (addressMap == null)
                 addressMap = Resources.Load<AddressMap>("AddressMap");
             if (addressMap == null)
-                Debug.LogWarning("AddressMap is null. You won't be able to load by address.");
+                Debug.LogWarning("AddressMap没有找到");
             else
                 addressMap.InitMap();
         }
@@ -91,7 +91,7 @@ namespace ZAsset
         #region 公用 API
 
         //这个是真正加载资源 解包的 不只是建立链接
-        public async Task<AssetHandle<T>> LoadAsync<T>(string address) where T : UnityEngine.Object
+        public async UniTask<AssetHandle<T>> LoadAsync<T>(string address) where T : UnityEngine.Object
         {
             if (string.IsNullOrEmpty(address)) throw new ArgumentNullException(nameof(address));
             if (!addressMap || !addressMap.TryGet(address, out var rec))
@@ -101,16 +101,16 @@ namespace ZAsset
             if (_addressRef.ContainsKey(address)) _addressRef[address]++;
             else _addressRef[address] = 1;
 
-            //先保证bundle及其依赖
+            //先保证bundle及其依赖 已经加载，这一步是建立和bundle的链接
             await LoadBundleWithDependenciesAsync(rec.bundleName);
 
             //加载资源解包
             var ab = _bundles[rec.bundleName].ab;
-            var req = ab.LoadAssetAsync<T>(rec.assetPath);
-            await AwaitAsyncOperation(req);
-            var asset = req.asset as T;
-            if (asset == null) throw new Exception($"资源加载失败：{address}->{rec.assetPath}");
-            return new AssetHandle<T>(address, asset);
+            var asset = await ab.LoadAssetAsync<T>(rec.address);//注意这里要用逻辑名加载 不能用物理路径 会找不到
+           
+            var realAsset = asset as T;
+            if (realAsset == null) throw new Exception($"资源加载失败：{address}->{rec.assetPath}");
+            return new AssetHandle<T>(address, realAsset);
         }
 
         //释放某个地址的资源 引用计数维护
@@ -163,7 +163,7 @@ namespace ZAsset
         #endregion 
 
         #region bundle 加载实现
-        private async Task LoadBundleWithDependenciesAsync(string bundleName)
+        private async UniTask LoadBundleWithDependenciesAsync(string bundleName)
         {
             //递归加载依赖项
             var deps = _manifest?.GetAllDependencies(bundleName) ?? Array.Empty<string>();
@@ -174,7 +174,7 @@ namespace ZAsset
             await LoadBundleAsync(bundleName);
         }
 
-        private async Task LoadBundleAsync(string bundleName)
+        private async UniTask LoadBundleAsync(string bundleName)
         {
             //已经加载过了
             if(_bundles.TryGetValue(bundleName,out var entry))
@@ -208,15 +208,15 @@ namespace ZAsset
             _bundles[bundleName] = (ab, 1); 
         }
 
-        private async Task<AssetBundle> LoadBundleInternalAsync(string bundleName,string fullPath)
+        private async UniTask<AssetBundle> LoadBundleInternalAsync(string bundleName,string fullPath)
         {
             if(!File.Exists(fullPath))
-                throw new FileNotFoundException($"Bundle not found: {fullPath}");
-            var req = AssetBundle.LoadFromFileAsync(fullPath);
-            await AwaitAsyncOperation(req);
-            if(! req.assetBundle)
-                throw new Exception($"Load bundle failed: {bundleName}");
-            return req.assetBundle;
+                throw new FileNotFoundException($"Bundle没有找到: {fullPath}");
+            var assetBundle = await AssetBundle.LoadFromFileAsync(fullPath);
+           
+            if(assetBundle==null)
+                throw new Exception($"加载bundle失败: {bundleName}");
+            return assetBundle;
 
         }
 
@@ -273,12 +273,12 @@ namespace ZAsset
 
         //-------------- 工具 ---------------
         //将unity异步操作转为Task类型 （uniTask的临时代替）
-        private static async Task AwaitAsyncOperation(AsyncOperation op)
-        {
-            var tcs = new TaskCompletionSource<bool>();
-            op.completed += _ => tcs.TrySetResult(true);
-            await tcs.Task;
-        }
+        //private static async Task AwaitAsyncOperation(AsyncOperation op)
+        //{
+        //    var tcs = new TaskCompletionSource<bool>();
+        //    op.completed += _ => tcs.TrySetResult(true);
+        //    await tcs.Task;
+        //}
 
     }
 }

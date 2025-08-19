@@ -10,7 +10,7 @@ namespace ZAsset
     [Serializable]
     public class AddressRecord
     {
-        public string address;//对外使用的地址（可读名）
+        public string address;//对外使用的地址（调用时候的名称 可读名）
         public string bundleName;//属于的AB包名（含后缀）
         public string assetPath;//资源在项目中的原始路径（用于AssetBundle.LoadAsset）
     }
