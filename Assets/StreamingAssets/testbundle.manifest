@@ -1,15 +1,15 @@
 ManifestFileVersion: 0
-CRC: 3713698179
+CRC: 1732069859
 Hashes:
   AssetFileHash:
     serializedVersion: 2
-    Hash: 17da34e76a3d45ee4b10b59f15696a3c
+    Hash: d26f3bc9b0c3e14225262804f9644f4c
   TypeTreeHash:
     serializedVersion: 2
-    Hash: 16c8aa2ea7eeb9c3aebb6cebe2273284
+    Hash: 48f9e47804cc6149eb45c38c55466448
   IncrementalBuildHash:
     serializedVersion: 2
-    Hash: 17da34e76a3d45ee4b10b59f15696a3c
+    Hash: d26f3bc9b0c3e14225262804f9644f4c
 HashAppended: 0
 ClassTypes:
 - Class: 1
@@ -24,12 +24,11 @@ ClassTypes:
   Script: {instanceID: 0}
 - Class: 43
   Script: {instanceID: 0}
-- Class: 48
-  Script: {instanceID: 0}
 - Class: 65
   Script: {instanceID: 0}
 SerializeReferenceClassIdentifiers: []
 Assets:
 - Assets/Scripts/Demo/Prefab/TestCube2.prefab
 - Assets/Scripts/Demo/Prefab/TestCube.prefab
-Dependencies: []
+Dependencies:
+- D:/projects/my/zasset/AssetBundles/testmat

@@ -21,4 +21,7 @@ MonoBehaviour:
   - address: TestCube2
     asset: {fileID: 9123514331506472595, guid: 7fab9bec75a4c3548848acc938be3330, type: 3}
     bundleName: TestBundle
+  - address: Mat
+    asset: {fileID: 102900000, guid: 13f2c6aaf0eaf414d899101dcb4af747, type: 3}
+    bundleName: TestMat
   addressMapAssetPath: Assets/AddressMap.asset
