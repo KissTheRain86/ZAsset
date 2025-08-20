@@ -26,7 +26,7 @@ namespace ZAsset.Edidor
 
             foreach(var e in config.assets)
             {
-                if (!e.asset) { Debug.LogWarning($"地址资源为空:{e.address}");continue; }
+                if (!e.asset) { Debug.LogWarning($"地址资源为空:{e.bundleName}");continue; }
                 var assetPath = AssetDatabase.GetAssetPath(e.asset);
                 var bundle = e.bundleName.ToLowerInvariant();
 
@@ -39,16 +39,16 @@ namespace ZAsset.Edidor
                 var build = new AssetBundleBuild
                 {
                     assetBundleName = bundle,
-                    assetNames = new[] { assetPath },
-                    addressableNames = new[] { e.address }
+                    assetNames = e.pathList.ToArray(),
+                    addressableNames = e.addressList.ToArray()
                 };
                 list.Add(build);//获取bundle对应的AssetBundleBuild list
 
                 addressRecords.Add(new AddressRecord
                 {
-                    address = e.address,
                     bundleName = bundle,
-                    assetPath = assetPath
+                    addressList = e.addressList,                 
+                    PathList = e.pathList
                 });
 
                 //合并每个bundle的assets

@@ -15,13 +15,22 @@ MonoBehaviour:
   options: 256
   outputFolder: AssetBundles
   assets:
-  - address: TestCube
-    asset: {fileID: 9123514331506472595, guid: d3f711c027de37a46b96ce925a2a2fb2, type: 3}
-    bundleName: TestBundle
-  - address: TestCube2
-    asset: {fileID: 9123514331506472595, guid: 7fab9bec75a4c3548848acc938be3330, type: 3}
-    bundleName: TestBundle
-  - address: Mat
+  - bundleName: TestBundle
+    asset: {fileID: 102900000, guid: c2ce8eaca0ee6cc4189b435ccecd6606, type: 3}
+    addressList:
+    - TestCube
+    - TestCube2
+    - TestCube3
+    pathList:
+    - Assets/Scripts/Demo/Prefab/TestCube.prefab
+    - Assets/Scripts/Demo/Prefab/TestCube2.prefab
+    - Assets/Scripts/Demo/Prefab/TestCube3.prefab
+  - bundleName: TestBundle
     asset: {fileID: 102900000, guid: 13f2c6aaf0eaf414d899101dcb4af747, type: 3}
-    bundleName: TestMat
+    addressList:
+    - CubeMat
+    - CubeMat2
+    pathList:
+    - Assets/Scripts/Demo/Material/CubeMat.mat
+    - Assets/Scripts/Demo/Material/CubeMat2.mat
   addressMapAssetPath: Assets/AddressMap.asset

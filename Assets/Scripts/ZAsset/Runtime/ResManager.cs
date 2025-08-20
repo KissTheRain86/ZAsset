@@ -109,10 +109,10 @@ namespace ZAsset
 
             //加载资源解包
             var ab = _bundles[rec.bundleName].ab;
-            var asset = await ab.LoadAssetAsync<T>(rec.address);//注意这里要用逻辑名加载 不能用物理路径 会找不到
+            var asset = await ab.LoadAssetAsync<T>(address);//注意这里要用逻辑名加载 不能用物理路径 会找不到
            
             var realAsset = asset as T;
-            if (realAsset == null) throw new Exception($"资源加载失败：{address}->{rec.assetPath}");
+            if (realAsset == null) throw new Exception($"资源加载失败: {address}");
             return new AssetHandle<T>(address, realAsset);
         }
 
@@ -263,8 +263,12 @@ namespace ZAsset
                 {
                     if (!string.Equals(r.bundleName, bundleName, StringComparison.OrdinalIgnoreCase))
                         continue;
-                    if (_addressRef.TryGetValue(r.address, out var c))
-                        count += c;
+                    foreach(var address in r.addressList)
+                    {
+                        if (_addressRef.TryGetValue(address, out var c))
+                            count += c;
+                    }
+                   
                 }
             }
 
