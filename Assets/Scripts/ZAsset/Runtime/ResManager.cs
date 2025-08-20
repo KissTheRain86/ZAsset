@@ -23,7 +23,7 @@ namespace ZAsset
         [Header("自定义根目录（当模式=CustomAbsolutePath）")]
         public string customRootPath;
 
-        [Header("AddressMap 引用（建议放到 Resources 或手动赋值）")]
+        [Header("AddressMap 引用")]
         public AddressMap addressMap;
 
         private AssetBundleManifest _manifest;//由主包 main manifest bundle提供
@@ -74,7 +74,7 @@ namespace ZAsset
         #region 初始化
         public async UniTask InitAsync(string manifestBundleName = "AssetBundles")
         {
-            // 注意：manifestBundleName 应与打包平台一致
+            // AssetBundles 为默认自动生成的manifestBundleName名称
             var bundlePath = Path.Combine(_abRoot, manifestBundleName);
             _manifestBundle = await LoadBundleInternalAsync(manifestBundleName, bundlePath);
             _manifest = _manifestBundle.LoadAsset<AssetBundleManifest>("AssetBundleManifest");
@@ -277,7 +277,7 @@ namespace ZAsset
         //对所有bundle的引用计数减一
         private void DecreaseBundleRefChain(string bundleName)
         {
-            // 先对所有依赖做 -- （GetAllDependencies 已经是“递归全量”）
+            // 先对所有依赖减一
             var deps = GetDeps(bundleName);
             foreach (var d in deps)
             {
@@ -288,7 +288,7 @@ namespace ZAsset
                 }
             }
 
-            // 再对根 bundle 自身做 --
+            // 再对根bundle自身做减一
             if (_bundles.TryGetValue(bundleName, out var entry))
             {
                 int next = Mathf.Max(0, entry.refCount - 1);
