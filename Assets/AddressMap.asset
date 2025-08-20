@@ -13,12 +13,19 @@ MonoBehaviour:
   m_Name: AddressMap
   m_EditorClassIdentifier: 
   entries:
-  - address: TestCube
-    bundleName: testbundle
-    assetPath: Assets/Scripts/Demo/Prefab/TestCube.prefab
-  - address: TestCube2
-    bundleName: testbundle
-    assetPath: Assets/Scripts/Demo/Prefab/TestCube2.prefab
-  - address: Mat
-    bundleName: testmat
-    assetPath: Assets/Scripts/Demo/Material
+  - bundleName: ab_prefab
+    addressList:
+    - TestCube
+    - TestCube2
+    - TestCube3
+    PathList:
+    - Assets/Scripts/Demo/Prefab/TestCube.prefab
+    - Assets/Scripts/Demo/Prefab/TestCube2.prefab
+    - Assets/Scripts/Demo/Prefab/TestCube3.prefab
+  - bundleName: ab_mat
+    addressList:
+    - CubeMat
+    - CubeMat2
+    PathList:
+    - Assets/Scripts/Demo/Material/CubeMat.mat
+    - Assets/Scripts/Demo/Material/CubeMat2.mat

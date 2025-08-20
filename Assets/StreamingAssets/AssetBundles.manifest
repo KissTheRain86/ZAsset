@@ -1,11 +1,11 @@
 ManifestFileVersion: 0
-CRC: 3359987727
+CRC: 1709160804
 AssetBundleManifest:
   AssetBundleInfos:
     Info_0:
-      Name: testbundle
+      Name: ab_prefab
       Dependencies:
-        Dependency_0: testmat
+        Dependency_0: ab_mat
     Info_1:
-      Name: testmat
+      Name: ab_mat
       Dependencies: {}
