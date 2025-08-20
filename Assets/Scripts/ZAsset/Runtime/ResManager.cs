@@ -10,7 +10,7 @@ namespace ZAsset
     public enum BundleLocateMode
     {
         StreamingAssets,   // Application.streamingAssetsPath
-        PersistentDataPath,// Application.persistentDataPath（适合远程热更后放这里）
+        PersistentDataPath,// Application.persistentDataPath
         CustomAbsolutePath // 绝对路径（自行设置 RootPath）
     }
     public class ResManager : MonoBehaviour

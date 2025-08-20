@@ -124,7 +124,7 @@ namespace ZAsset.Edidor
             map.entries = records;
             EditorUtility.SetDirty(map);
             AssetDatabase.SaveAssets();
-            Debug.Log($"AddressMap saved: {config.addressMapAssetPath}");
+            Debug.Log($"AddressMap 已经保存: {config.addressMapAssetPath}");
         }
     }
 }

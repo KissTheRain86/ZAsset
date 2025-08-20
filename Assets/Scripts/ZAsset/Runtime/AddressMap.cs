@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-// 运行时用于从地址（address）解析到 bundle 和资源路径。
+// 运行时用于从逻辑地址（address）解析到 bundle 和资源路径。
 
 namespace ZAsset
 {
