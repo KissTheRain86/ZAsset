@@ -4,7 +4,6 @@ using UnityEngine;
 using ZAsset;
 using Cysharp.Threading.Tasks;
 using System;
-using System.Runtime.Remoting.Lifetime;
 
 public class Boot : MonoBehaviour
 {
@@ -25,12 +24,19 @@ public class Boot : MonoBehaviour
 
         var handle = await ResManager.Instance.LoadAsync<GameObject>("TestCube");
         var go = GameObject.Instantiate(handle.Asset);
+        go.transform.position = new Vector3(0, 0, 0);
 
-        await UniTask.Delay(TimeSpan.FromSeconds(2), ignoreTimeScale: false);
+        var handle2 = await ResManager.Instance.LoadAsync<GameObject>("TestCube2");
+        var go2 = GameObject.Instantiate(handle2.Asset);
+        go2.transform.position = new Vector3(3, 0, 0);
+
+        await UniTask.Delay(TimeSpan.FromSeconds(5), ignoreTimeScale: false);
 
         Debug.Log("释放游戏对象");
         Destroy(go);
+        Destroy(go2);
         handle.Dispose();
+        handle2.Dispose();
     }
 
 

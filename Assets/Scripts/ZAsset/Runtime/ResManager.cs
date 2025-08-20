@@ -39,6 +39,9 @@ namespace ZAsset
         //bundleName -> task 异步等待
         private readonly Dictionary<string, UniTask<AssetBundle>> _loadingTasks = new Dictionary<string, UniTask<AssetBundle>>();
 
+        //依赖缓存
+        private readonly Dictionary<string, string[]> _depsCache = new Dictionary<string, string[]>();
+
 
         private void Awake()
         {
@@ -71,7 +74,7 @@ namespace ZAsset
         #region 初始化
         public async UniTask InitAsync(string manifestBundleName = "AssetBundles")
         {
-            // 注意：manifestBundleName 应与打包平台一致。Editor Builder 会把主 bundle 命名为目标平台名。
+            // 注意：manifestBundleName 应与打包平台一致
             var bundlePath = Path.Combine(_abRoot, manifestBundleName);
             _manifestBundle = await LoadBundleInternalAsync(manifestBundleName, bundlePath);
             _manifest = _manifestBundle.LoadAsset<AssetBundleManifest>("AssetBundleManifest");
@@ -124,6 +127,9 @@ namespace ZAsset
             //当对某个地址的引用为0时 尝试卸载bundle
             if(addressMap && addressMap.TryGet(address,out var rec))
             {
+                //对bundle作链式计数减一
+                DecreaseBundleRefChain(rec.bundleName);
+                //根据address引用和bundle引用的双重结果尝试卸载
                 TryUnloadBundle(rec.bundleName);
             }
         }
@@ -166,7 +172,7 @@ namespace ZAsset
         private async UniTask LoadBundleWithDependenciesAsync(string bundleName)
         {
             //递归加载依赖项
-            var deps = _manifest?.GetAllDependencies(bundleName) ?? Array.Empty<string>();
+            var deps = GetDeps(bundleName);
             foreach(var dep in deps)
             {
                 await LoadBundleAsync(dep);
@@ -230,13 +236,12 @@ namespace ZAsset
 
             UnloadBundle(bundleName, false);
 
-            var deps = _manifest?.GetAllDependencies(bundleName)?? Array.Empty<string>();
+            var deps = GetDeps(bundleName);
             foreach(var d in deps)
             {
                 if (BundleRefCount(d) <= 0)
                     UnloadBundle(d, false);
             }
-
         }
 
         private void UnloadBundle(string bundleName,bool unloadAllLoadedObj)
@@ -269,16 +274,38 @@ namespace ZAsset
             return count;
         }
 
+        //对所有bundle的引用计数减一
+        private void DecreaseBundleRefChain(string bundleName)
+        {
+            // 先对所有依赖做 -- （GetAllDependencies 已经是“递归全量”）
+            var deps = GetDeps(bundleName);
+            foreach (var d in deps)
+            {
+                if (_bundles.TryGetValue(d, out var depEntry))
+                {
+                    int next = Mathf.Max(0, depEntry.refCount - 1);
+                    _bundles[d] = (depEntry.ab, next);
+                }
+            }
+
+            // 再对根 bundle 自身做 --
+            if (_bundles.TryGetValue(bundleName, out var entry))
+            {
+                int next = Mathf.Max(0, entry.refCount - 1);
+                _bundles[bundleName] = (entry.ab, next);
+            }
+        }
+
         #endregion
 
         //-------------- 工具 ---------------
-        //将unity异步操作转为Task类型 （uniTask的临时代替）
-        //private static async Task AwaitAsyncOperation(AsyncOperation op)
-        //{
-        //    var tcs = new TaskCompletionSource<bool>();
-        //    op.completed += _ => tcs.TrySetResult(true);
-        //    await tcs.Task;
-        //}
+        private string[] GetDeps(string bundleName)
+        {
+            if(_depsCache.TryGetValue(bundleName, out var depsArr)) return depsArr;
+            var deps = _manifest?.GetAllDependencies(bundleName)?? Array.Empty<string>();
+            _depsCache[bundleName] = deps;  
+            return deps;
+        }
 
     }
 }

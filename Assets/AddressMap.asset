@@ -16,3 +16,6 @@ MonoBehaviour:
   - address: TestCube
     bundleName: testbundle
     assetPath: Assets/Scripts/Demo/Prefab/TestCube.prefab
+  - address: TestCube2
+    bundleName: testbundle
+    assetPath: Assets/Scripts/Demo/Prefab/TestCube2.prefab

@@ -92,8 +92,6 @@ namespace ZAsset.Edidor
 
                 Debug.Log($"构建完成，输出路径 : {outputDir}");
             }
-
-
         }
 
         //获取配置的bundlebuildconfig内容
