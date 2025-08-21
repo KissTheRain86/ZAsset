@@ -10,7 +10,7 @@ namespace ZAsset
     public enum BundleLocateMode
     {
         StreamingAssets,   // Application.streamingAssetsPath
-        PersistentDataPath,// Application.persistentDataPath
+        PersistentDataPath,// Application.persistentDataPath（适合远程热更后放这里）
         CustomAbsolutePath // 绝对路径（自行设置 RootPath）
     }
     public class ResManager : MonoBehaviour
@@ -125,13 +125,22 @@ namespace ZAsset
             else _addressRef[address] = cnt;
 
             //当对某个地址的引用为0时 尝试卸载bundle
-            if(addressMap && addressMap.TryGet(address,out var rec))
+            if (addressMap && addressMap.TryGet(address, out var rec))
             {
                 //对bundle作链式计数减一
                 DecreaseBundleRefChain(rec.bundleName);
-                //根据address引用和bundle引用的双重结果尝试卸载
-                TryUnloadBundle(rec.bundleName);
+                switch (rec.assetType)
+                {
+                    case AssetTag.Common: // 对公共资源，不卸载
+                        Debug.LogWarning(rec.bundleName + " 为公共资源， 不卸载");
+                        break;
+                    default:
+                        //根据address引用和bundle引用的双重结果尝试卸载
+                        TryUnloadBundle(rec.bundleName);
+                        break;
+                }
             }
+
         }
 
         //卸载所有无引用的bundle

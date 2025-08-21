@@ -24,6 +24,10 @@ namespace ZAsset.Edidor
 
         [Header("资源物理地址")]
         public List<string> pathList = new List<string>();//资源物理地址
+
+        [Header("资源类型")]
+        public AssetTag assetTag; // 资源标签
+
     }
 
     [CreateAssetMenu(fileName ="BundleBuildConfig",menuName ="ZAsset/BundleBuildConfig",order =0)]
@@ -35,8 +39,6 @@ namespace ZAsset.Edidor
 
         //输出 AddressMap 的保存路径
         public string addressMapAssetPath = "Assets/AddressMap.asset";
-
-
 
         public void OnValidate()
         {
@@ -50,6 +52,7 @@ namespace ZAsset.Edidor
         {
             assetConf.addressList.Clear();
             assetConf.pathList.Clear();
+            assetConf.assetTag = AssetTag.Common;
             if (assetConf.asset == null) return;
             string path = AssetDatabase.GetAssetPath(assetConf.asset);
             if (AssetDatabase.IsValidFolder(path))
@@ -84,6 +87,7 @@ namespace ZAsset.Edidor
                 assetConf.addressList.Add(fileName);
                 assetConf.pathList.Add(path);
             }
+
         }
 
     }

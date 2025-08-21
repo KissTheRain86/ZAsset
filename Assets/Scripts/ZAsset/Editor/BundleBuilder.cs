@@ -48,7 +48,8 @@ namespace ZAsset.Edidor
                 {
                     bundleName = bundle,
                     addressList = e.addressList,                 
-                    PathList = e.pathList
+                    PathList = e.pathList,
+                    assetType = e.assetTag,
                 });
 
                 //合并每个bundle的assets
@@ -74,14 +75,7 @@ namespace ZAsset.Edidor
 
                 //输出路径
                 var outputDir = Path.Combine(Environment.CurrentDirectory, config.outputFolder);
-                if (Directory.Exists(outputDir))
-                {
-                    Utils.CleanDirectory(outputDir);
-                }
-                else
-                {
-                    Directory.CreateDirectory(outputDir);
-                }
+                if(!Directory.Exists(outputDir)) Directory.CreateDirectory(outputDir);
 
                 //构建资源
                 var manifest = BuildPipeline.BuildAssetBundles(
@@ -124,7 +118,7 @@ namespace ZAsset.Edidor
             map.entries = records;
             EditorUtility.SetDirty(map);
             AssetDatabase.SaveAssets();
-            Debug.Log($"AddressMap 已经保存: {config.addressMapAssetPath}");
+            Debug.Log($"AddressMap saved: {config.addressMapAssetPath}");
         }
     }
 }

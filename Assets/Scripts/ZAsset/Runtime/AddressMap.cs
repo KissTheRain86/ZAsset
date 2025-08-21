@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-// 运行时用于从逻辑地址（address）解析到 bundle 和资源路径。
+// 运行时用于从地址（address）解析到 bundle 和资源路径。
 
 namespace ZAsset
 {
@@ -13,6 +13,7 @@ namespace ZAsset
         public string bundleName;//属于的AB包名（含后缀）
         public List<string> addressList;//对外使用的地址（调用时候的名称 可读名）每个address需要是唯一的
         public List<string> PathList;//资源在项目中的原始路径（用于AssetBundle.LoadAsset）
+        public AssetTag assetType; // 资源类
     }
 
     [CreateAssetMenu(fileName ="AddressMap",menuName ="ZAsset/AddressMap",order =0)]
