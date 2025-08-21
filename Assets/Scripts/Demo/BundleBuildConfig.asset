@@ -15,7 +15,7 @@ MonoBehaviour:
   options: 256
   outputFolder: AssetBundles
   assets:
-  - bundleName: TestBundle
+  - bundleName: ab_prefab
     asset: {fileID: 102900000, guid: c2ce8eaca0ee6cc4189b435ccecd6606, type: 3}
     addressList:
     - TestCube
@@ -26,7 +26,7 @@ MonoBehaviour:
     - Assets/Scripts/Demo/Prefab/TestCube2.prefab
     - Assets/Scripts/Demo/Prefab/TestCube3.prefab
     assetTag: 1
-  - bundleName: TestBundle
+  - bundleName: ab_mat
     asset: {fileID: 102900000, guid: 13f2c6aaf0eaf414d899101dcb4af747, type: 3}
     addressList:
     - CubeMat

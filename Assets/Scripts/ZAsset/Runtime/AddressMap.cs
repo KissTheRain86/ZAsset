@@ -16,11 +16,15 @@ namespace ZAsset
         public AssetTag assetType; // 资源类
     }
 
-    [CreateAssetMenu(fileName ="AddressMap",menuName ="ZAsset/AddressMap",order =0)]
-    public class AddressMap : ScriptableObject
+    //[CreateAssetMenu(fileName ="AddressMap",menuName ="ZAsset/AddressMap",order =0)]
+    public class AddressMap
     {
         public List<AddressRecord> entries = new List<AddressRecord>();
         private Dictionary<string, AddressRecord> _map; //addressName - >AdressRecord
+        public AddressMap(List<AddressRecord> addressRecords)
+        {
+            entries = addressRecords;
+        }
         public void InitMap()
         {
             if(_map!=null) return;
@@ -43,6 +47,19 @@ namespace ZAsset
             InitMap();
             return _map.TryGetValue(address, out record);
         }
+
+        //序列化为json
+        public string ToJson()
+        {
+            return JsonUtility.ToJson(this,true);
+        }
+
+        //反序列化
+        public static AddressMap FromJson(string json)
+        {
+            return JsonUtility.FromJson<AddressMap>(json);
+        }
+
     }
 
 }

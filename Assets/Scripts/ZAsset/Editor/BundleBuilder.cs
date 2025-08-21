@@ -114,19 +114,12 @@ namespace ZAsset.Edidor
 
         //根据BundleBuildConfig AddressRecord列表 生成AddressMap
         private static void GenerateAddressMap(BundleBuildConfig config,List<AddressRecord> records)
-        {
-            var map = AssetDatabase.LoadAssetAtPath<AddressMap>(config.addressMapAssetPath);
-            if (map == null)
-            {
-                map = ScriptableObject.CreateInstance<AddressMap>();
-                var dir = Path.GetDirectoryName(config.addressMapAssetPath);
-                if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
-                AssetDatabase.CreateAsset(map, config.addressMapAssetPath);
-            }
-            map.entries = records;
-            EditorUtility.SetDirty(map);
-            AssetDatabase.SaveAssets();
-            Debug.Log($"AddressMap 已经保存: {config.addressMapAssetPath}");
+        {            
+            var map = new AddressMap(records);
+            string json = map.ToJson();
+            string jsonPath = Path.Combine(Environment.CurrentDirectory, config.outputFolder, "AdressMap.json");
+            File.WriteAllText(jsonPath, json);
+            Debug.Log($"AddressMap 已经保存: {jsonPath}");
         }
     }
 }

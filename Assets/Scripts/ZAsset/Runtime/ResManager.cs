@@ -83,12 +83,30 @@ namespace ZAsset
 
             // 构建AddressMap 索引
             if (addressMap == null)
-                addressMap = Resources.Load<AddressMap>("AddressMap");
+            {
+                string addressMapPath = Path.Combine(_abRoot, "AdressMap.json");
+                addressMap = LoadFromJson(addressMapPath);
+            }
+               
             if (addressMap == null)
                 Debug.LogWarning("AddressMap没有找到");
             else
                 addressMap.InitMap();
         }
+
+        private AddressMap LoadFromJson(string path)
+        {
+            if (!File.Exists(path))
+            {
+                Debug.LogError($"AddressMap.json 不存在: {path}");
+                return null;
+            }
+            string json = File.ReadAllText(path);
+            var map = AddressMap.FromJson(json);
+            map.InitMap();
+            return map;
+        }
+
         #endregion
 
         #region 公用 API
@@ -97,7 +115,7 @@ namespace ZAsset
         public async UniTask<AssetHandle<T>> LoadAsync<T>(string address) where T : UnityEngine.Object
         {
             if (string.IsNullOrEmpty(address)) throw new ArgumentNullException(nameof(address));
-            if (!addressMap || !addressMap.TryGet(address, out var rec))
+            if (addressMap == null || !addressMap.TryGet(address, out var rec))
                 throw new Exception($"没有找到地址：{address}");
 
             //地址引用计数 +1 （按需在Dispose时-1）
@@ -125,7 +143,7 @@ namespace ZAsset
             else _addressRef[address] = cnt;
 
             //当对某个地址的引用为0时 尝试卸载bundle
-            if (addressMap && addressMap.TryGet(address, out var rec))
+            if (addressMap!=null && addressMap.TryGet(address, out var rec))
             {
                 //对bundle作链式计数减一
                 DecreaseBundleRefChain(rec.bundleName);
@@ -266,7 +284,7 @@ namespace ZAsset
         {
             // 以“地址引用”推导 bundle 引用数（保守估算）
             int count = 0;
-            if (addressMap)
+            if (addressMap!=null)
             {
                 foreach (var r in addressMap.entries)
                 {
