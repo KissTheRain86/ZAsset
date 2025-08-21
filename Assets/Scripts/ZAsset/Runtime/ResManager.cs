@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using Cysharp.Threading.Tasks;
+using UnityEditor;
 
 namespace ZAsset
 {
@@ -84,10 +85,32 @@ namespace ZAsset
             // 构建AddressMap 索引
             if (addressMap == null)
             {
-                string addressMapPath = Path.Combine(_abRoot, "AdressMap.json");
+                string addressMapPath = Path.Combine(_abRoot, "AddressMap.json");
                 addressMap = LoadFromJson(addressMapPath);
             }
                
+            if (addressMap == null)
+                Debug.LogWarning("AddressMap没有找到");
+            else
+                addressMap.InitMap();
+        }
+
+        public void InitSync(string manifestBundleName = "AssetBundles")
+        {
+            // AssetBundles 为默认自动生成的manifestBundleName名称
+            var bundlePath = Path.Combine(_abRoot, manifestBundleName);
+            _manifestBundle = LoadBundleInternalSync(manifestBundleName, bundlePath);
+            _manifest = _manifestBundle.LoadAsset<AssetBundleManifest>("AssetBundleManifest");
+            if (_manifest == null)
+                Debug.LogError("AssetBundleManifest没有找到");
+
+            // 构建AddressMap索引
+            if(addressMap ==null)
+            {
+                string addressMapPath = Path.Combine(_abRoot, "AddressMap.json");
+                addressMap = LoadFromJson(addressMapPath);
+            }
+
             if (addressMap == null)
                 Debug.LogWarning("AddressMap没有找到");
             else
@@ -134,6 +157,29 @@ namespace ZAsset
             return new AssetHandle<T>(address, realAsset);
         }
 
+        // 同步加载真正资源
+        public AssetHandle<T> LoadSync<T>(string address) where T : UnityEngine.Object
+        {
+            if(string.IsNullOrEmpty(address)) throw new ArgumentNullException(nameof(address));
+            if (addressMap == null || !addressMap.TryGet(address, out var rec))
+                throw new Exception($"没有找到地址：{address}");
+
+            // 地址引用计数 +1  (按需在Dispose时-1)
+            if (_addressRef.ContainsKey(address)) _addressRef[address]++;
+            else _addressRef[address] = 1;
+
+            // 加载bundle及其依赖，这一步是建立和bundle的链接
+            LoadBundleWithDependenciesSync(rec.bundleName);
+
+            // 加载资源解包
+            var ab = _bundles[rec.bundleName].ab;
+            var asset = ab.LoadAsset<T>(address);
+
+            var realAsset = asset as T;
+            if (realAsset == null) throw new Exception($"资源加载失败：{address}");
+            return new AssetHandle<T>(address, realAsset);
+        }
+
         //释放某个地址的资源 引用计数维护
         public void Release(string address)
         {
@@ -147,7 +193,7 @@ namespace ZAsset
             {
                 //对bundle作链式计数减一
                 DecreaseBundleRefChain(rec.bundleName);
-                switch (rec.assetType)
+                switch (rec.assetTag)
                 {
                     case AssetTag.Common: // 对公共资源，不卸载
                         Debug.LogWarning(rec.bundleName + " 为公共资源， 不卸载");
@@ -193,9 +239,12 @@ namespace ZAsset
 
         }
 
-        #endregion 
+        #endregion
 
         #region bundle 加载实现
+
+        #region bundle 异步加载
+
         private async UniTask LoadBundleWithDependenciesAsync(string bundleName)
         {
             //递归加载依赖项
@@ -254,6 +303,52 @@ namespace ZAsset
         }
 
         #endregion
+
+        #region bundle 同步加载
+
+        private void LoadBundleWithDependenciesSync(string bundleName)
+        {
+            // 递归加载依赖项
+            var deps = GetDeps(bundleName);
+            foreach (var dep in deps)
+            {
+                LoadBundleSync(dep);
+            }
+            LoadBundleSync(bundleName);
+        }
+
+        private void LoadBundleSync(string bundleName)
+        {
+            // 已经加载过了
+            if (_bundles.TryGetValue(bundleName, out var entry))
+            {
+                _bundles[bundleName] = (entry.ab, entry.refCount + 1);
+                return;
+            }
+
+            // 没有加载过
+            var path = Path.Combine(_abRoot, bundleName);
+            var ab = LoadBundleInternalSync(bundleName, path);
+
+            // 加载完成后 记录加载完成的dic
+            _bundles[bundleName] = (ab, 1);
+        }
+
+        private AssetBundle LoadBundleInternalSync(string bundleName, string fullPath)
+        {
+            if (!File.Exists(fullPath))
+                throw new FileNotFoundException($"Bundle没有找到：{fullPath}");
+            var assetBundle = AssetBundle.LoadFromFile(fullPath);
+
+            if (assetBundle == null)
+                throw new Exception($"加载bundle失败：{bundleName}");
+            return assetBundle;
+        }
+        #endregion
+
+        #endregion
+
+
 
         #region bundle 卸载实现       
         private void TryUnloadBundle(string bundleName)

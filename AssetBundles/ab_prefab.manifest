@@ -1,15 +1,15 @@
 ManifestFileVersion: 0
-CRC: 310673358
+CRC: 1130082285
 Hashes:
   AssetFileHash:
     serializedVersion: 2
-    Hash: dca2db7281b3d952fe6c78f3a7ab0750
+    Hash: 5cde0d75d33f03355e6b8967c00f26c9
   TypeTreeHash:
     serializedVersion: 2
     Hash: 48f9e47804cc6149eb45c38c55466448
   IncrementalBuildHash:
     serializedVersion: 2
-    Hash: dca2db7281b3d952fe6c78f3a7ab0750
+    Hash: 5cde0d75d33f03355e6b8967c00f26c9
 HashAppended: 0
 ClassTypes:
 - Class: 1
@@ -31,5 +31,6 @@ Assets:
 - Assets/Scripts/Demo/Prefab/TestCube2.prefab
 - Assets/Scripts/Demo/Prefab/TestCube3.prefab
 - Assets/Scripts/Demo/Prefab/TestCube.prefab
+- Assets/Scripts/Demo/Prefab/TestCubeSync.prefab
 Dependencies:
-- D:/projects/my/zasset/AssetBundles/ab_mat
+- D:/test/MYGAMES/MyGithub/zz/ZAsset/AssetBundles/ab_mat

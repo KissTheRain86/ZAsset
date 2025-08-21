@@ -1,15 +1,15 @@
 ManifestFileVersion: 0
-CRC: 733531799
+CRC: 3503837224
 Hashes:
   AssetFileHash:
     serializedVersion: 2
-    Hash: 5d6680be26411200b745c29d88013cf6
+    Hash: 2803e35cf33c25ad67dc0de1b84ef71c
   TypeTreeHash:
     serializedVersion: 2
     Hash: 5e762ccb57c4caaabbb5a4199ac82c23
   IncrementalBuildHash:
     serializedVersion: 2
-    Hash: 5d6680be26411200b745c29d88013cf6
+    Hash: 2803e35cf33c25ad67dc0de1b84ef71c
 HashAppended: 0
 ClassTypes:
 - Class: 21
@@ -20,4 +20,5 @@ SerializeReferenceClassIdentifiers: []
 Assets:
 - Assets/Scripts/Demo/Material/CubeMat2.mat
 - Assets/Scripts/Demo/Material/CubeMat.mat
+- Assets/Scripts/Demo/Material/CubeMatSync.mat
 Dependencies: []

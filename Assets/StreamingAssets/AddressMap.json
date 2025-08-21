@@ -5,26 +5,30 @@
             "addressList": [
                 "TestCube",
                 "TestCube2",
-                "TestCube3"
+                "TestCube3",
+                "TestCubeSync"
             ],
             "PathList": [
                 "Assets/Scripts/Demo/Prefab/TestCube.prefab",
                 "Assets/Scripts/Demo/Prefab/TestCube2.prefab",
-                "Assets/Scripts/Demo/Prefab/TestCube3.prefab"
+                "Assets/Scripts/Demo/Prefab/TestCube3.prefab",
+                "Assets/Scripts/Demo/Prefab/TestCubeSync.prefab"
             ],
-            "assetType": 1
+            "assetTag": 0
         },
         {
             "bundleName": "ab_mat",
             "addressList": [
                 "CubeMat",
-                "CubeMat2"
+                "CubeMat2",
+                "CubeMatSync"
             ],
             "PathList": [
                 "Assets/Scripts/Demo/Material/CubeMat.mat",
-                "Assets/Scripts/Demo/Material/CubeMat2.mat"
+                "Assets/Scripts/Demo/Material/CubeMat2.mat",
+                "Assets/Scripts/Demo/Material/CubeMatSync.mat"
             ],
-            "assetType": 1
+            "assetTag": 1
         }
     ]
 }

@@ -49,7 +49,7 @@ namespace ZAsset.Edidor
                     bundleName = bundle,
                     addressList = e.addressList,                 
                     PathList = e.pathList,
-                    assetType = e.assetTag,
+                    assetTag = e.assetTag,
                 });
 
                 //合并每个bundle的assets
@@ -117,7 +117,7 @@ namespace ZAsset.Edidor
         {            
             var map = new AddressMap(records);
             string json = map.ToJson();
-            string jsonPath = Path.Combine(Environment.CurrentDirectory, config.outputFolder, "AdressMap.json");
+            string jsonPath = Path.Combine(Environment.CurrentDirectory, config.outputFolder, "AddressMap.json");
             File.WriteAllText(jsonPath, json);
             Debug.Log($"AddressMap 已经保存: {jsonPath}");
         }
