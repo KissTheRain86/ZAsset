@@ -1,4 +1,4 @@
-using System.Collections;
+锘縰sing System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -6,7 +6,7 @@ namespace ZAsset
 {
     public enum AssetTag
     {
-        Default = 0, // 默认资源
-        Common = 1,  // common资源(释放资源时，引用计数-1，不真正卸载)
+        Default = 0, // 榛樿璧勬簮
+        Common = 1,  // common璧勬簮(閲婃斁璧勬簮鏃讹紝寮曠敤璁℃暟-1锛屼笉鐪熸鍗歌浇)
     }
 }

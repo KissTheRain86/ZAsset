@@ -1,4 +1,4 @@
-using System.Collections;
+ï»¿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using ZAsset;
@@ -17,11 +17,11 @@ public class Boot : MonoBehaviour
     {
         await ResManager.Instance.InitAsync();
 
-        Debug.Log("³õÊ¼»¯Íê³É");
+        Debug.Log("åˆå§‹åŒ–å®Œæˆ");
 
         await UniTask.Delay(TimeSpan.FromSeconds(2), ignoreTimeScale: false);
 
-        Debug.Log("¿ªÊ¼¼ÓÔØÓÎÏ·¶ÔÏó");
+        Debug.Log("å¼€å§‹åŠ è½½æ¸¸æˆå¯¹è±¡");
 
         var handle = await ResManager.Instance.LoadAsync<GameObject>("TestCube");
         var go = GameObject.Instantiate(handle.Asset);
@@ -38,7 +38,7 @@ public class Boot : MonoBehaviour
         await UniTask.Delay(TimeSpan.FromSeconds(5), ignoreTimeScale: false);
 
 
-        Debug.Log("ÊÍ·ÅÓÎÏ·¶ÔÏó");
+        Debug.Log("é‡Šæ”¾æ¸¸æˆå¯¹è±¡");
         Destroy(go);
         Destroy(go2);
         Destroy(go_sync);
