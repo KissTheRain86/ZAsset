@@ -11,7 +11,7 @@ namespace ZAsset
     {
         StreamingAssets,   // Application.streamingAssetsPath
         PersistentDataPath,// Application.persistentDataPath
-        CustomAbsolutePath // 绝对路径（自行设置 RootPath）
+        CustomAbsolutePath // 自定义路径（自行设置 RootPath）
     }
     public class ResManager : MonoBehaviour
     {
