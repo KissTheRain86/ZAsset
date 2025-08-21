@@ -25,8 +25,8 @@ namespace ZAsset.Edidor
         [Header("资源物理地址")]
         public List<string> pathList = new List<string>();//资源物理地址
 
-        [Header("资源类型")]
-        public AssetTag assetTag; // 资源标签
+        [Header("资源标签")]
+        public AssetTag assetTag = AssetTag.Default; // 资源标签
 
     }
 
@@ -52,7 +52,6 @@ namespace ZAsset.Edidor
         {
             assetConf.addressList.Clear();
             assetConf.pathList.Clear();
-            assetConf.assetTag = AssetTag.Common;
             if (assetConf.asset == null) return;
             string path = AssetDatabase.GetAssetPath(assetConf.asset);
             if (AssetDatabase.IsValidFolder(path))
