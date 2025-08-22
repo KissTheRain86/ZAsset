@@ -14,7 +14,7 @@ namespace ZAsset
     }
     public class ResManager : MonoBehaviour
     {
-        public static ResManager Instance {  get; private set; }
+        public static ResManager Instance { get; private set; }
 
         [Header("加载根目录模式")]
         public BundleLocateMode locateMode = BundleLocateMode.StreamingAssets;
@@ -88,7 +88,7 @@ namespace ZAsset
                 string addressMapPath = Path.Combine(_abRoot, "AddressMap.json");
                 addressMap = LoadFromJson(addressMapPath);
             }
-               
+
             if (addressMap == null)
                 Debug.LogWarning("AddressMap没有找到");
             else
@@ -105,7 +105,7 @@ namespace ZAsset
                 Debug.LogError("AssetBundleManifest没有找到");
 
             // 构建AddressMap索引
-            if(addressMap ==null)
+            if (addressMap == null)
             {
                 string addressMapPath = Path.Combine(_abRoot, "AddressMap.json");
                 addressMap = LoadFromJson(addressMapPath);
@@ -151,7 +151,7 @@ namespace ZAsset
             //加载资源解包
             var ab = _bundles[rec.bundleName].ab;
             var asset = await ab.LoadAssetAsync<T>(address);//注意这里要用逻辑名加载 不能用物理路径 会找不到
-           
+
             var realAsset = asset as T;
             if (realAsset == null) throw new Exception($"资源加载失败: {address}");
             return new AssetHandle<T>(address, realAsset);
@@ -160,7 +160,7 @@ namespace ZAsset
         // 同步加载真正资源
         public AssetHandle<T> LoadSync<T>(string address) where T : UnityEngine.Object
         {
-            if(string.IsNullOrEmpty(address)) throw new ArgumentNullException(nameof(address));
+            if (string.IsNullOrEmpty(address)) throw new ArgumentNullException(nameof(address));
             if (addressMap == null || !addressMap.TryGet(address, out var rec))
                 throw new Exception($"没有找到地址：{address}");
 
@@ -189,7 +189,7 @@ namespace ZAsset
             else _addressRef[address] = cnt;
 
             //当对某个地址的引用为0时 尝试卸载bundle
-            if (addressMap!=null && addressMap.TryGet(address, out var rec))
+            if (addressMap != null && addressMap.TryGet(address, out var rec))
             {
                 //对bundle作链式计数减一
                 DecreaseBundleRefChain(rec.bundleName);
@@ -210,11 +210,11 @@ namespace ZAsset
         //卸载所有无引用的bundle
         public void UnloadUnusedBundles(bool unloadAllLoadedObj = false)
         {
-            var toUnload  = new List<string>(); 
-            foreach(var kv in _bundles)
+            var toUnload = new List<string>();
+            foreach (var kv in _bundles)
             {
                 string name = kv.Key;
-                if(BundleRefCount(name)<=0)
+                if (BundleRefCount(name) <= 0)
                     toUnload.Add(name);
             }
             foreach (var name in toUnload)
@@ -234,7 +234,7 @@ namespace ZAsset
             if (_manifestBundle)
             {
                 _manifestBundle.Unload(true);
-                _manifestBundle= null;
+                _manifestBundle = null;
             }
 
         }
@@ -249,7 +249,7 @@ namespace ZAsset
         {
             //递归加载依赖项
             var deps = GetDeps(bundleName);
-            foreach(var dep in deps)
+            foreach (var dep in deps)
             {
                 await LoadBundleAsync(dep);
             }
@@ -259,7 +259,7 @@ namespace ZAsset
         private async UniTask LoadBundleAsync(string bundleName)
         {
             //已经加载过了
-            if(_bundles.TryGetValue(bundleName,out var entry))
+            if (_bundles.TryGetValue(bundleName, out var entry))
             {
                 entry.abInfo.RefCount++;
                 _bundles[bundleName] = (entry.ab, entry.refCount + 1, entry.abInfo);
@@ -267,10 +267,10 @@ namespace ZAsset
             }
 
             //如果正在加载 等待
-            if(_loadingTasks.TryGetValue(bundleName,out var task))
+            if (_loadingTasks.TryGetValue(bundleName, out var task))
             {
                 var abWait = await task;
-                if(_bundles.TryGetValue(bundleName,out entry))
+                if (_bundles.TryGetValue(bundleName, out entry))
                 {
                     entry.abInfo.RefCount++;
                     _bundles[bundleName] = (entry.ab, entry.refCount + 1, entry.abInfo);
@@ -289,16 +289,16 @@ namespace ZAsset
             //加载完成后 移除正在加载的task
             _loadingTasks.Remove(bundleName);
             //加载完成后 记录加载完成的dic
-            _bundles[bundleName] = (ab, 1, new ZAssetBundleInfo(bundleName)); 
+            _bundles[bundleName] = (ab, 1, new ZAssetBundleInfo(bundleName));
         }
 
-        private async UniTask<AssetBundle> LoadBundleInternalAsync(string bundleName,string fullPath)
+        private async UniTask<AssetBundle> LoadBundleInternalAsync(string bundleName, string fullPath)
         {
-            if(!File.Exists(fullPath))
+            if (!File.Exists(fullPath))
                 throw new FileNotFoundException($"Bundle没有找到: {fullPath}");
             var assetBundle = await AssetBundle.LoadFromFileAsync(fullPath);
-           
-            if(assetBundle==null)
+
+            if (assetBundle == null)
                 throw new Exception($"加载bundle失败: {bundleName}");
             return assetBundle;
 
@@ -326,7 +326,7 @@ namespace ZAsset
             {
                 entry.abInfo.RefCount++;
                 _bundles[bundleName] = (entry.ab, entry.refCount + 1, entry.abInfo);
-                if(_waitUnloadQueue.Contains(entry.abInfo))
+                if (_waitUnloadQueue.Contains(entry.abInfo))
                     _waitUnloadQueue.Remove(entry.abInfo);
                 return;
             }
@@ -364,14 +364,14 @@ namespace ZAsset
             UnloadBundle(bundleName, false);
 
             var deps = GetDeps(bundleName);
-            foreach(var d in deps)
+            foreach (var d in deps)
             {
                 if (BundleRefCount(d) <= 0)
                     UnloadBundle(d, false);
             }
         }
 
-        private void UnloadBundle(string bundleName,bool unloadAllLoadedObj)
+        private void UnloadBundle(string bundleName, bool unloadAllLoadedObj)
         {
             if (!_bundles.TryGetValue(bundleName, out var entry)) return;
             if (BundleRefCount(bundleName) > 0) return;
@@ -387,18 +387,18 @@ namespace ZAsset
         {
             // 以“地址引用”推导 bundle 引用数（保守估算）
             int count = 0;
-            if (addressMap!=null)
+            if (addressMap != null)
             {
                 foreach (var r in addressMap.entries)
                 {
                     if (!string.Equals(r.bundleName, bundleName, StringComparison.OrdinalIgnoreCase))
                         continue;
-                    foreach(var address in r.addressList)
+                    foreach (var address in r.addressList)
                     {
                         if (_addressRef.TryGetValue(address, out var c))
                             count += c;
                     }
-                   
+
                 }
             }
 
@@ -432,14 +432,25 @@ namespace ZAsset
             }
         }
 
+        // 卸载待卸载队列中的bundle
+        private void UnloadWaitQueueBundle(int count)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                var waitAbInfo = _waitUnloadQueue.Peek();
+                UnloadBundle(waitAbInfo.abName, false);
+                _waitUnloadQueue.Dequeue();
+            }
+        }
+
         #endregion
 
         //-------------- 工具 ---------------
         private string[] GetDeps(string bundleName)
         {
-            if(_depsCache.TryGetValue(bundleName, out var depsArr)) return depsArr;
-            var deps = _manifest?.GetAllDependencies(bundleName)?? Array.Empty<string>();
-            _depsCache[bundleName] = deps;  
+            if (_depsCache.TryGetValue(bundleName, out var depsArr)) return depsArr;
+            var deps = _manifest?.GetAllDependencies(bundleName) ?? Array.Empty<string>();
+            _depsCache[bundleName] = deps;
             return deps;
         }
 
