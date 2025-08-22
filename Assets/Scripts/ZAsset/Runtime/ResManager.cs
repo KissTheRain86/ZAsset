@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using Cysharp.Threading.Tasks;
-using UnityEditor;
 
 namespace ZAsset
 {
@@ -32,7 +30,7 @@ namespace ZAsset
         private AssetBundle _manifestBundle;//用于加载manifest的bundle
 
         //bundleName -> AssetBundle + refCount 已经加载的ab
-        private readonly Dictionary<string, (AssetBundle ab, int refCount)> _bundles = new Dictionary<string, (AssetBundle ab, int refCount)>();
+        private readonly Dictionary<string, (AssetBundle ab, int refCount, ZAssetBundleInfo abInfo)> _bundles = new Dictionary<string, (AssetBundle ab, int refCount, ZAssetBundleInfo abInfo)>();
 
         //address -> asset refCount 用于按地址引用计数卸载
         private readonly Dictionary<string, int> _addressRef = new Dictionary<string, int>();
@@ -43,6 +41,8 @@ namespace ZAsset
         //依赖缓存
         private readonly Dictionary<string, string[]> _depsCache = new Dictionary<string, string[]>();
 
+        // 待卸载队列
+        private readonly PriorityQueue<ZAssetBundleInfo> _waitUnloadQueue = new PriorityQueue<ZAssetBundleInfo>();
 
         private void Awake()
         {
@@ -261,7 +261,8 @@ namespace ZAsset
             //已经加载过了
             if(_bundles.TryGetValue(bundleName,out var entry))
             {
-                _bundles[bundleName] = (entry.ab, entry.refCount + 1);
+                entry.abInfo.RefCount++;
+                _bundles[bundleName] = (entry.ab, entry.refCount + 1, entry.abInfo);
                 return;
             }
 
@@ -271,11 +272,12 @@ namespace ZAsset
                 var abWait = await task;
                 if(_bundles.TryGetValue(bundleName,out entry))
                 {
-                    _bundles[bundleName] = (entry.ab,entry.refCount + 1);
+                    entry.abInfo.RefCount++;
+                    _bundles[bundleName] = (entry.ab, entry.refCount + 1, entry.abInfo);
                 }
                 else
                 {
-                    _bundles[bundleName] = (abWait, 1);
+                    _bundles[bundleName] = (abWait, 1, new ZAssetBundleInfo(bundleName));
                 }
                 return;
             }
@@ -287,7 +289,7 @@ namespace ZAsset
             //加载完成后 移除正在加载的task
             _loadingTasks.Remove(bundleName);
             //加载完成后 记录加载完成的dic
-            _bundles[bundleName] = (ab, 1); 
+            _bundles[bundleName] = (ab, 1, new ZAssetBundleInfo(bundleName)); 
         }
 
         private async UniTask<AssetBundle> LoadBundleInternalAsync(string bundleName,string fullPath)
@@ -322,7 +324,10 @@ namespace ZAsset
             // 已经加载过了
             if (_bundles.TryGetValue(bundleName, out var entry))
             {
-                _bundles[bundleName] = (entry.ab, entry.refCount + 1);
+                entry.abInfo.RefCount++;
+                _bundles[bundleName] = (entry.ab, entry.refCount + 1, entry.abInfo);
+                if(_waitUnloadQueue.Contains(entry.abInfo))
+                    _waitUnloadQueue.Remove(entry.abInfo);
                 return;
             }
 
@@ -331,7 +336,7 @@ namespace ZAsset
             var ab = LoadBundleInternalSync(bundleName, path);
 
             // 加载完成后 记录加载完成的dic
-            _bundles[bundleName] = (ab, 1);
+            _bundles[bundleName] = (ab, 1, new ZAssetBundleInfo(bundleName));
         }
 
         private AssetBundle LoadBundleInternalSync(string bundleName, string fullPath)
@@ -370,6 +375,9 @@ namespace ZAsset
         {
             if (!_bundles.TryGetValue(bundleName, out var entry)) return;
             if (BundleRefCount(bundleName) > 0) return;
+
+            // 引用计数为0的资源 加入待卸载队列
+            _waitUnloadQueue.Enqueue(_bundles[bundleName].abInfo);
 
             entry.ab.Unload(unloadAllLoadedObj);
             _bundles.Remove(bundleName);
@@ -410,7 +418,8 @@ namespace ZAsset
                 if (_bundles.TryGetValue(d, out var depEntry))
                 {
                     int next = Mathf.Max(0, depEntry.refCount - 1);
-                    _bundles[d] = (depEntry.ab, next);
+                    depEntry.abInfo.RefCount = next;
+                    _bundles[d] = (depEntry.ab, next, depEntry.abInfo);
                 }
             }
 
@@ -418,7 +427,8 @@ namespace ZAsset
             if (_bundles.TryGetValue(bundleName, out var entry))
             {
                 int next = Mathf.Max(0, entry.refCount - 1);
-                _bundles[bundleName] = (entry.ab, next);
+                entry.abInfo.RefCount = next;
+                _bundles[bundleName] = (entry.ab, next, entry.abInfo);
             }
         }
 
