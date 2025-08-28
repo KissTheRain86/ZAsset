@@ -28,6 +28,7 @@ namespace ZAsset
         private AssetBundleManifest _manifest;//由主包 main manifest bundle提供
         private string _abRoot;//运行时解析出的AB根目录
         private AssetBundle _manifestBundle;//用于加载manifest的bundle
+        private const float UNLOAD_CD = 3f; // 定时卸载队列中的bundle
 
         //bundleName -> AssetBundle + refCount 已经加载的ab
         private readonly Dictionary<string, (AssetBundle ab, int refCount, ZAssetBundleInfo abInfo)> _bundles = new Dictionary<string, (AssetBundle ab, int refCount, ZAssetBundleInfo abInfo)>();
@@ -54,6 +55,26 @@ namespace ZAsset
             Instance = this;
             DontDestroyOnLoad(gameObject);
             resolveRoot();
+        }
+
+
+        private void Update()
+        {
+            UnloadWaitQueueInUpdate();
+        }
+
+        /// <summary>
+        /// 在 Update中 卸载所有待卸载队列中的Bundle
+        /// </summary>
+        private float waitTime = 0f;
+        private void UnloadWaitQueueInUpdate()
+        {
+            waitTime += Time.deltaTime;
+            if (waitTime >= UNLOAD_CD)
+            {
+                UnloadWaitQueueBundle(_waitUnloadQueue.Count);
+                waitTime = 0f;
+            }
         }
 
         private void resolveRoot()
@@ -239,6 +260,8 @@ namespace ZAsset
 
         }
 
+
+
         #endregion
 
         #region bundle 加载实现
@@ -361,13 +384,28 @@ namespace ZAsset
             //若引用计数<=0 则卸载 同时检查其依赖是否也可以卸载
             if (BundleRefCount(bundleName) > 0) return;
 
-            UnloadBundle(bundleName, false);
+            //UnloadBundle(bundleName, false);
+
+            if (!_waitUnloadQueue.Contains(_bundles[bundleName].abInfo))
+            {
+                // 引用计数为0的资源 加入待卸载队列
+                _waitUnloadQueue.Enqueue(_bundles[bundleName].abInfo);
+            }
+
 
             var deps = GetDeps(bundleName);
             foreach (var d in deps)
             {
                 if (BundleRefCount(d) <= 0)
-                    UnloadBundle(d, false);
+                {
+                    if (!_waitUnloadQueue.Contains(_bundles[bundleName].abInfo))
+                    {
+                        // 引用计数为0的资源 加入待卸载队列
+                        _waitUnloadQueue.Enqueue(_bundles[bundleName].abInfo);
+                    }
+                    //UnloadBundle(d, false);
+                }
+
             }
         }
 
@@ -376,11 +414,9 @@ namespace ZAsset
             if (!_bundles.TryGetValue(bundleName, out var entry)) return;
             if (BundleRefCount(bundleName) > 0) return;
 
-            // 引用计数为0的资源 加入待卸载队列
-            _waitUnloadQueue.Enqueue(_bundles[bundleName].abInfo);
-
             entry.ab.Unload(unloadAllLoadedObj);
             _bundles.Remove(bundleName);
+            Debug.Log($"{bundleName} 卸载");
         }
 
         private int BundleRefCount(string bundleName)
@@ -440,6 +476,7 @@ namespace ZAsset
                 var waitAbInfo = _waitUnloadQueue.Peek();
                 UnloadBundle(waitAbInfo.abName, false);
                 _waitUnloadQueue.Dequeue();
+                Debug.Log($"卸载队列中 {waitAbInfo.abName} 已卸载");
             }
         }
 
