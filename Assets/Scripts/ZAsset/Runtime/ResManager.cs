@@ -28,7 +28,7 @@ namespace ZAsset
         private AssetBundleManifest _manifest;//由主包 main manifest bundle提供
         private string _abRoot;//运行时解析出的AB根目录
         private AssetBundle _manifestBundle;//用于加载manifest的bundle
-        private const float UNLOAD_CD = 3f; // 定时卸载队列中的bundle
+        private const float UNLOAD_CD = 20f; // 定时卸载队列中的bundle
 
         //bundleName -> AssetBundle + refCount 已经加载的ab
         private readonly Dictionary<string, (AssetBundle ab, int refCount, ZAssetBundleInfo abInfo)> _bundles = new Dictionary<string, (AssetBundle ab, int refCount, ZAssetBundleInfo abInfo)>();
