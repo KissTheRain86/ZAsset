@@ -1,0 +1,22 @@
+{
+    "keys": [
+        "MatGreen",
+        "TestCube",
+        "MatRed",
+        "TestCube2",
+        "MatBlue",
+        "TestCubeSync",
+        "TestSphere1",
+        "TestSphere2"
+    ],
+    "values": [
+        "14e9efd12367926a282ae4dba1a626e8",
+        "93def2e1ae425f308aafde02f74f1d80",
+        "e6697a263aee586e6877e80250508114",
+        "47eee9b3d1cb34ca08dc2421db068fd5",
+        "c78eee7946e80bd8698bb3a566a185e9",
+        "deadc16b2ec3e55e7174ef53fae209bd",
+        "1e6547ec501bbb227ec250d1a00e355b",
+        "e8ffbb031b0f0238b074c4976f31e22a"
+    ]
+}

@@ -7,15 +7,23 @@ using UnityEngine;
 
 namespace ZAsset
 {
-    public class AssetHandle<T> : IDisposable where T : UnityEngine.Object
+    public class AssetHandle<T> : IRecycle, IDisposable where T : UnityEngine.Object
     {
-        private readonly string _address;
-        private readonly T _asset;
+        private string _address;
+        private T _asset;
         private bool _disposed;
 
         public T Asset => _asset;
+        public AssetHandle()
+        {
 
+        }
         public AssetHandle(string address, T asset)
+        {
+            Init(address, asset);
+        }
+
+        public void Init(string address, T asset)
         {
             _address = address;
             _asset = asset;
@@ -26,6 +34,12 @@ namespace ZAsset
             if(_disposed) return;
             _disposed = true;
             ResManager.Instance.Release(_address);
+            ObjectPool.Instance.Push<AssetHandle<T>>(this);
+        }
+
+        public void Create()
+        {
+            _disposed = false;
         }
     }
 

@@ -1,0 +1,22 @@
+{
+    "keys": [
+        "matblue",
+        "matgreen",
+        "matred",
+        "testcube",
+        "testcube2",
+        "testcubesync",
+        "testsphere1",
+        "testsphere2"
+    ],
+    "values": [
+        "7ecce98cd1b4f3530a70dc8bb6dc4ad7",
+        "5450fe3491881bddb8b3337be2cb4103",
+        "4be48706924bac47c3a7e8ef9dad1ce5",
+        "c22fc0295ac1194b47729716d81f99fd",
+        "39203490436de00eb0dfea6b105f1af4",
+        "2d2354cc9fcb118ff8285a578ec1685d",
+        "db9035cb4e6029b58defda22f8622236",
+        "b5294828bba751d7c45fed0479ef3a91"
+    ]
+}

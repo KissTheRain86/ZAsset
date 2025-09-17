@@ -1,11 +1,34 @@
 ManifestFileVersion: 0
-CRC: 2381645104
+CRC: 4278881628
 AssetBundleManifest:
   AssetBundleInfos:
     Info_0:
-      Name: ab_prefab
-      Dependencies:
-        Dependency_0: ab_mat
-    Info_1:
-      Name: ab_mat
+      Name: matgreen
       Dependencies: {}
+    Info_1:
+      Name: testcube
+      Dependencies:
+        Dependency_0: matred
+    Info_2:
+      Name: matred
+      Dependencies: {}
+    Info_3:
+      Name: testcube2
+      Dependencies:
+        Dependency_0: matblue
+    Info_4:
+      Name: matblue
+      Dependencies: {}
+    Info_5:
+      Name: testcubesync
+      Dependencies:
+        Dependency_0: matgreen
+    Info_6:
+      Name: testsphere1
+      Dependencies:
+        Dependency_0: matred
+        Dependency_1: matblue
+    Info_7:
+      Name: testsphere2
+      Dependencies:
+        Dependency_0: matgreen

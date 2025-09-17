@@ -1,0 +1,33 @@
+ManifestFileVersion: 0
+CRC: 2166212391
+Hashes:
+  AssetFileHash:
+    serializedVersion: 2
+    Hash: c22fc0295ac1194b47729716d81f99fd
+  TypeTreeHash:
+    serializedVersion: 2
+    Hash: 48f9e47804cc6149eb45c38c55466448
+  IncrementalBuildHash:
+    serializedVersion: 2
+    Hash: c22fc0295ac1194b47729716d81f99fd
+HashAppended: 0
+ClassTypes:
+- Class: 1
+  Script: {instanceID: 0}
+- Class: 4
+  Script: {instanceID: 0}
+- Class: 21
+  Script: {instanceID: 0}
+- Class: 23
+  Script: {instanceID: 0}
+- Class: 33
+  Script: {instanceID: 0}
+- Class: 43
+  Script: {instanceID: 0}
+- Class: 65
+  Script: {instanceID: 0}
+SerializeReferenceClassIdentifiers: []
+Assets:
+- Assets/Bundles/Separate/TestCube.prefab
+Dependencies:
+- D:/test/ZAsset/AssetBundles/matred

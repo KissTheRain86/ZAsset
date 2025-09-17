@@ -1,0 +1,33 @@
+ManifestFileVersion: 0
+CRC: 3634819677
+Hashes:
+  AssetFileHash:
+    serializedVersion: 2
+    Hash: 39203490436de00eb0dfea6b105f1af4
+  TypeTreeHash:
+    serializedVersion: 2
+    Hash: 48f9e47804cc6149eb45c38c55466448
+  IncrementalBuildHash:
+    serializedVersion: 2
+    Hash: 39203490436de00eb0dfea6b105f1af4
+HashAppended: 0
+ClassTypes:
+- Class: 1
+  Script: {instanceID: 0}
+- Class: 4
+  Script: {instanceID: 0}
+- Class: 21
+  Script: {instanceID: 0}
+- Class: 23
+  Script: {instanceID: 0}
+- Class: 33
+  Script: {instanceID: 0}
+- Class: 43
+  Script: {instanceID: 0}
+- Class: 65
+  Script: {instanceID: 0}
+SerializeReferenceClassIdentifiers: []
+Assets:
+- Assets/Bundles/Separate/TestCube2.prefab
+Dependencies:
+- D:/test/ZAsset/AssetBundles/matblue

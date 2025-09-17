@@ -1,0 +1,38 @@
+ManifestFileVersion: 0
+CRC: 1975863959
+Hashes:
+  AssetFileHash:
+    serializedVersion: 2
+    Hash: db9035cb4e6029b58defda22f8622236
+  TypeTreeHash:
+    serializedVersion: 2
+    Hash: 52d98f26dac52af9a4aebe27e283fb1e
+  IncrementalBuildHash:
+    serializedVersion: 2
+    Hash: db9035cb4e6029b58defda22f8622236
+HashAppended: 0
+ClassTypes:
+- Class: 1
+  Script: {instanceID: 0}
+- Class: 4
+  Script: {instanceID: 0}
+- Class: 21
+  Script: {instanceID: 0}
+- Class: 23
+  Script: {instanceID: 0}
+- Class: 33
+  Script: {instanceID: 0}
+- Class: 43
+  Script: {instanceID: 0}
+- Class: 48
+  Script: {instanceID: 0}
+- Class: 135
+  Script: {instanceID: 0}
+SerializeReferenceClassIdentifiers: []
+Assets:
+- Assets/Bundles/Separate/TestSphere1/SphereBlue.prefab
+- Assets/Bundles/Separate/TestSphere1/SphereRed.prefab
+- Assets/Bundles/Separate/TestSphere1/SphereYellow.prefab
+Dependencies:
+- D:/test/ZAsset/AssetBundles/matblue
+- D:/test/ZAsset/AssetBundles/matred
