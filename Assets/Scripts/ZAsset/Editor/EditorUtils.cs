@@ -1,8 +1,10 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using Unity.VisualScripting;
 using UnityEditor;
 using UnityEngine;
+using static Codice.Client.Commands.WkTree.WorkspaceTreeNode;
 
 namespace ZAsset.Editor
 {
@@ -26,47 +28,32 @@ namespace ZAsset.Editor
         /// <summary>
         /// 根据路径获取文件名
         /// </summary>
-        public static string GetFileNameByPath(string path)
+        public static string GetFileNameByPath(string path,bool needExtension = false)
         {
-            return Path.GetFileNameWithoutExtension(path);
+            if(!needExtension) return Path.GetFileName(path);
+            else return Path.GetFileNameWithoutExtension(path);
+
         }
 
         /// <summary>
         /// 根据路径列表获取文件名列表
         /// </summary>
-        public static List<string> GetFileNamesByPaths(List<string> paths)
+        public static List<string> GetFileNamesByPaths(List<string> paths,bool needExtension = false)
         {
             List<string> addressList = new List<string>();
             foreach (var path in paths)
             {
-                addressList.Add(GetFileNameByPath(path));
+                addressList.Add(GetFileNameByPath(path,needExtension));
             }
             return addressList;
         }
 
-        /// <summary>
-        /// 递归获取一个文件夹下所有文件的pathName
-        /// </summary>
-        /// <returns></returns>
-        public static List<string> GetDirAllPathName(string path)
-        {
-            List<string> paths = new();
-            string[] guids = AssetDatabase.FindAssets("", new[] { path });
-            foreach (var guid in guids)
-            {
-                string filePath = AssetDatabase.GUIDToAssetPath(guid);
-                if (!Directory.Exists(filePath))//过滤文件夹 只要文件
-                {
-                    paths.Add(filePath);
-                }
-            }
-            return paths;
-        }
+
 
         /// <summary>
-        /// 获取指定路径下的所有文件（不递归，不包含 .meta）
+        /// 获取指定路径下的所有文件（不包含 .meta）
         /// </summary>
-        public static List<string> GetDirectFiles(string path)
+        public static List<string> GetDirectFiles(string path,bool recursion = false)
         {
             List<string> results = new List<string>();
 
@@ -79,7 +66,9 @@ namespace ZAsset.Editor
                 return results;
             }
 
-            var files = Directory.GetFiles(fullPath, "*", SearchOption.TopDirectoryOnly);
+            SearchOption searchOption = recursion ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
+
+            var files = Directory.GetFiles(fullPath, "*", searchOption);
             foreach (var file in files)
             {
                 if (file.EndsWith(".meta")) continue; // 跳过 meta
@@ -92,9 +81,9 @@ namespace ZAsset.Editor
         }
 
         /// <summary>
-        /// 获取指定路径下的所有子文件夹（不递归）
+        /// 获取指定路径下的所有子文件夹
         /// </summary>
-        public static List<string> GetDirectFolders(string path)
+        public static List<string> GetDirectFolders(string path,bool recursion = false)
         {
             List<string> results = new List<string>();
 
@@ -106,8 +95,8 @@ namespace ZAsset.Editor
                 Debug.LogWarning($"目录不存在: {path}");
                 return results;
             }
-
-            var dirs = Directory.GetDirectories(fullPath, "*", SearchOption.TopDirectoryOnly);
+            SearchOption searchOption = recursion ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
+            var dirs = Directory.GetDirectories(fullPath, "*", searchOption);
             foreach (var dir in dirs)
             {
                 string relPath = dir.Replace(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar, "")
@@ -118,6 +107,41 @@ namespace ZAsset.Editor
             return results;
         }
 
+        public static bool StartsWithAny(string path, string[] prefixes)
+        {
+            foreach (var p in prefixes)
+            {
+                if (path.StartsWith(p)) return true;
+            }
+            return false;
+        }
+
+       
+        public static bool CheckFilesToEndWithSuffix(string folderPath, string suffix)
+        {
+            if (!Directory.Exists(folderPath))
+            {
+                Debug.LogError($"目录不存在: {folderPath}");
+                return false;
+            }
+            var files = GetDirectFiles(folderPath, true);
+            if (files != null)
+            {
+                foreach (string file in files)
+                {
+                  
+                    string fileNameWithoutExt = Path.GetFileNameWithoutExtension(file);
+                    if (!fileNameWithoutExt.EndsWith(suffix))
+                    {
+                        Debug.Log($"文件{fileNameWithoutExt}后缀不为{suffix}");
+                        return false;
+                    }
+                    
+                }
+
+            }
+            return true;
+        }
 
 
     }

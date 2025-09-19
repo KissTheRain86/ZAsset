@@ -17,7 +17,7 @@ namespace ZAsset.Editor
         /// <summary>
         /// 各个资源的引用计数
         /// </summary> 
-        private static Dictionary<string, HashSet<string>> RefCounts = new();
+        private static Dictionary<string,int> RefCounts = new();
         /// <summary>
         /// 公共Bundle哈希表，存储已经存储在公共资源包中的资源路径
         /// </summary>
@@ -26,14 +26,6 @@ namespace ZAsset.Editor
         /// 独立Bundle哈希表，存储已经存储在所有独立Bundle的资源路径
         /// </summary>
         private static HashSet<string> SeparateBundleSet = new();
-        /// <summary>
-        /// 打包配置
-        /// </summary>
-        private static BundleBuildConfig BuildConfig = null;
-        /// <summary>
-        /// 用于生成AddressMap的列表
-        /// </summary>
-        private static List<BundleConfigItem> AddressRecords = new();
 
         /// <summary>
         /// 存储已经处理好的Bundle打包数据
@@ -46,21 +38,14 @@ namespace ZAsset.Editor
         public static void BuildBundles()
         {
             //初始化数据
-            ClearData();
-
-            BuildConfig = LoadConfig();
-            if (BuildConfig == null)
-            {
-                Debug.LogError("BundleBuildConfig 未创建，通过 Assets/Create/ZAsset/BundleBuildConfig 进行创建！");
-                return;
-            }
+            ClearData();     
+            ZAssetCollector.Instance.InitInfo();
            
             //构建BuildPipeline的输入
-            foreach (var group in BuildConfig.assets)
+            foreach (var group in ZAssetCollector.Instance.GroupMap.Values)
             {
-                if (group.asset == null) { Debug.LogWarning($"地址资源为空:{group.GroupName}");continue; }
                 SetPrefabRefCount(group);
-                if (group.assetTag == AssetTag.Common)
+                if (group.GroupTag == AssetTag.Common)
                 {
                     BuildCommonBundle(group);
                 }
@@ -76,13 +61,13 @@ namespace ZAsset.Editor
         /// 构建公共Bundle数据 一组一个bundle
         /// </summary>
         /// <param name="path"></param>
-        private static void BuildCommonBundle(AssetGroupConfig group)
+        private static void BuildCommonBundle(AssetGroup group)
         {        
             
             foreach(var bundle in group.BundlePathMap.Keys)
             {             
                 AddBundleToBuild(bundle, group.BundlePathMap[bundle], group.BundleAddressMap[bundle],AssetTag.Common);
-                //添加标记
+                //添加标记 避免额外打包在common中的资源
                 foreach (var path in group.BundlePathMap[bundle])
                 {
                     CommonBundleSet.Add(path);
@@ -94,9 +79,9 @@ namespace ZAsset.Editor
         /// 构建独立Bundle包数据
         /// </summary>
         /// <param name="path"></param>
-        private static void BuildSeparateBundle(AssetGroupConfig group)
+        private static void BuildSeparateBundle(AssetGroup group)
         {
-            foreach (var bundle in group.bundleList)
+            foreach (var bundle in group.BundlePathMap.Keys)
             {
                 AddBundleToBuild(bundle, group.BundlePathMap[bundle], group.BundleAddressMap[bundle], AssetTag.Default);
                 foreach (var path in group.BundlePathMap[bundle])
@@ -143,7 +128,7 @@ namespace ZAsset.Editor
             if (finalList == null || finalList.Count == 0)
                 return;
             //输出路径
-            var outputDir = Path.Combine(Environment.CurrentDirectory, BuildConfig.outputFolder);
+            var outputDir = Path.Combine(Environment.CurrentDirectory, BundlePathEditor.OutputBundlePath);
 
             if (Directory.Exists(outputDir))
             {
@@ -158,7 +143,7 @@ namespace ZAsset.Editor
             var manifest = BuildPipeline.BuildAssetBundles(
                 outputDir,
                 finalList.ToArray(),
-                BuildConfig.options,
+                ZAssetCollector.Instance.options,
                 EditorUserBuildSettings.activeBuildTarget);
             
             
@@ -198,32 +183,33 @@ namespace ZAsset.Editor
             File.WriteAllText(md5JsonPath, md5JsonText);
 
             //生成addressmap资源
-            GenerateAddressMap(BuildConfig, AddressRecords);
+            //GenerateAddressMap(BuildConfig, AddressRecords);
             Debug.Log($"构建完成，输出路径 : {outputDir}");
             //自动打开
             EditorUtility.RevealInFinder(outputDir+"/");
         }
         #region 处理数据
         /// <summary>
-        /// 计算并存储各个资源被引用的计数
+        /// 针对非common（一个文件一个bundle）计算并存储各个资源被引用的计数
         /// </summary>
-        public static void SetPrefabRefCount(AssetGroupConfig config)
+        public static void SetPrefabRefCount(AssetGroup config)
         {
-            for (int i = 0; i < config.pathList.Count; i++)
+            //原则上common中的资源不会依赖其他资源 可节约时间不分析依赖计数
+            if (config.GroupTag == AssetTag.Common) return;
+            for (int i = 0; i < config.PathList.Count; i++)
             {
                 // 获取该 Prefab 的所有依赖
-                var deps = AssetDatabase.GetDependencies(config.pathList[i], true)
+                var deps = AssetDatabase.GetDependencies(config.PathList[i], true)
                     .Where(d => !d.EndsWith(".cs") && !d.EndsWith(".unity"))
                     .ToHashSet(); // 去重
                 foreach (var dep in deps)
                 {
-                    if (dep == config.pathList[i])
+                    if (dep == config.PathList[i])
                         continue;
-                    var bundleName = BuildConfig.GetBundleNameByAssetPath(config.pathList[i]);
                    
                     if (!RefCounts.ContainsKey(dep))
-                        RefCounts[dep] = new HashSet<string> { bundleName };
-                    RefCounts[dep].Add(bundleName); 
+                        RefCounts[dep] = 0;
+                    RefCounts[dep]++; 
                 }
             }
         }
@@ -231,7 +217,7 @@ namespace ZAsset.Editor
         /// <summary>
         /// 检查资源的依赖 如果某依赖的被引用数大于1 则要单独打包
         /// </summary>
-        private static void TryBuildSharedResources(string bundle, AssetGroupConfig group)
+        private static void TryBuildSharedResources(string bundle, AssetGroup group)
         {
             var paths = group.BundlePathMap[bundle];//获取所有资源的物理地址
             foreach(var path in paths)
@@ -245,7 +231,7 @@ namespace ZAsset.Editor
                 {
                     if (CommonBundleSet.Contains(dep) || SeparateBundleSet.Contains(dep))
                         continue;
-                    if (RefCounts.ContainsKey(dep) && RefCounts[dep].Count > 1 && dep != path)
+                    if (RefCounts.ContainsKey(dep) && RefCounts[dep] > 1 && dep != path)
                     {
                         SeparateBundleSet.Add(dep);//添加独占资源标签
                         //将这个共享资源单独打包
@@ -256,24 +242,16 @@ namespace ZAsset.Editor
             }        
         }
 
-        //获取在editor配置的bundlebuildconfig内容
-        private static BundleBuildConfig LoadConfig()
-        {
-            var guids = AssetDatabase.FindAssets("t:BundleBuildConfig");
-            if (guids == null || guids.Length == 0) return null;
-            var path = AssetDatabase.GUIDToAssetPath(guids[0]);
-            return AssetDatabase.LoadAssetAtPath<BundleBuildConfig>(path);
-        }
 
         //根据BundleBuildConfig 生成 BundleConfig
-        private static void GenerateAddressMap(BundleBuildConfig config, List<BundleConfigItem> records)
-        {
-            var bundleConf = new BundleConfig(records);
-            string json = bundleConf.ToJson();
-            string jsonPath = Path.Combine(Environment.CurrentDirectory, config.outputFolder, "BundleConfig.json");
-            File.WriteAllText(jsonPath, json);
-            Debug.Log($"BundleConfig 已经保存: {jsonPath}");
-        }
+        //private static void GenerateAddressMap(BundleBuildConfig config, List<BundleConfigItem> records)
+        //{
+        //    var bundleConf = new BundleConfig(records);
+        //    string json = bundleConf.ToJson();
+        //    string jsonPath = Path.Combine(Environment.CurrentDirectory, config.outputFolder, "BundleConfig.json");
+        //    File.WriteAllText(jsonPath, json);
+        //    Debug.Log($"BundleConfig 已经保存: {jsonPath}");
+        //}
 
         //将某个path的资源单独打包
         private static void AddBundleToBuild(string path)
@@ -298,15 +276,7 @@ namespace ZAsset.Editor
                 addressableNames = addressList.ToArray()
             };
             list.Add(build);//获取bundle对应的AssetBundleBuild list
-
-            //构建运行时调用的addressmap信息
-            AddressRecords.Add(new BundleConfigItem
-            {
-                bundleName = bundle,
-                addressList = addressList,
-                pathList = pathList,
-                assetTag = tag
-            });
+         
         }
 
 
@@ -317,10 +287,8 @@ namespace ZAsset.Editor
         {
             CommonBundleSet.Clear();
             RefCounts.Clear();
-            AddressRecords.Clear();
             BundleMap.Clear();
             SeparateBundleSet.Clear();
-            BuildConfig = null;
         }
         #endregion
 
