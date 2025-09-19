@@ -167,10 +167,10 @@ namespace ZAsset.Editor
             }
             // 生成MD5字典
             Dictionary<string, string> bundleMD5s = new();
-            foreach (var bundle in BundleMap)
+            foreach (var bundle in bundles)
             {
-                var path = Path.Combine(outputDir, bundle.Key);
-                bundleMD5s[bundle.Key] = AssetUtils.CaculateFileMd5(path);
+                var path = Path.Combine(outputDir, bundle);
+                bundleMD5s[bundle] = AssetUtils.CaculateFileMd5(path);
             }
             // 写入 JSON 文件
             string jsonPath = Path.Combine(outputDir, "AllBundleHash.json");
