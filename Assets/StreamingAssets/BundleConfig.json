@@ -1,0 +1,88 @@
+{
+    "entries": [
+        {
+            "bundleName": "MatGreen",
+            "addressList": [
+                "MatGreen"
+            ],
+            "pathList": [
+                "Assets/Bundles/Common/MatGreen.mat"
+            ],
+            "assetTag": 1
+        },
+        {
+            "bundleName": "TestCube",
+            "addressList": [
+                "TestCube"
+            ],
+            "pathList": [
+                "Assets/Bundles/Separate/TestCube.prefab"
+            ],
+            "assetTag": 0
+        },
+        {
+            "bundleName": "MatRed",
+            "addressList": [
+                "MatRed"
+            ],
+            "pathList": [
+                "Assets/Bundles/_Else/MatRed.mat"
+            ],
+            "assetTag": 0
+        },
+        {
+            "bundleName": "TestCube2",
+            "addressList": [
+                "TestCube2"
+            ],
+            "pathList": [
+                "Assets/Bundles/Separate/TestCube2.prefab"
+            ],
+            "assetTag": 0
+        },
+        {
+            "bundleName": "MatBlue",
+            "addressList": [
+                "MatBlue"
+            ],
+            "pathList": [
+                "Assets/Bundles/_Else/MatBlue.mat"
+            ],
+            "assetTag": 0
+        },
+        {
+            "bundleName": "TestCubeSync",
+            "addressList": [
+                "TestCubeSync"
+            ],
+            "pathList": [
+                "Assets/Bundles/Separate/TestCubeSync.prefab"
+            ],
+            "assetTag": 0
+        },
+        {
+            "bundleName": "TestSphere1",
+            "addressList": [
+                "SphereBlue",
+                "SphereRed",
+                "SphereYellow"
+            ],
+            "pathList": [
+                "Assets/Bundles/Separate/TestSphere1/SphereBlue.prefab",
+                "Assets/Bundles/Separate/TestSphere1/SphereRed.prefab",
+                "Assets/Bundles/Separate/TestSphere1/SphereYellow.prefab"
+            ],
+            "assetTag": 0
+        },
+        {
+            "bundleName": "TestSphere2",
+            "addressList": [
+                "SphereGreen"
+            ],
+            "pathList": [
+                "Assets/Bundles/Separate/TestSphere2/SphereGreen.prefab"
+            ],
+            "assetTag": 0
+        }
+    ]
+}

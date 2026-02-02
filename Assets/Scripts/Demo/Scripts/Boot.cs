@@ -33,7 +33,7 @@ public class Boot : MonoBehaviour
         });
       
         //异步加载-await
-        var handle2 = await ResManager.Instance.LoadAsync<GameObject>( "SphereGreen");
+        var handle2 = await ResManager.Instance.LoadAsync<GameObject>("SphereGreen");
         var go2 = GameObject.Instantiate(handle2.Asset);
         go2.transform.position = new Vector3(3, 0, 0);
 

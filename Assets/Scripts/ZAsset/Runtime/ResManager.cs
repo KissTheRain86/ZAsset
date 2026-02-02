@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using Cysharp.Threading.Tasks;
-using System.Net;
 
 namespace ZAsset
 {
@@ -23,8 +22,8 @@ namespace ZAsset
         [Header("自定义根目录（当模式=CustomAbsolutePath）")]
         public string customRootPath;
 
-        //[Header("AddressMap 引用")]
-        //public BundleConfig addressMap;
+        [Header("AddressMap 引用")]
+        public BundleConfig addressMap;
 
         private AssetBundleManifest _manifest;//由主包 main manifest bundle提供
         private string _abRoot;//运行时解析出的AB根目录
@@ -102,16 +101,16 @@ namespace ZAsset
                 Debug.LogError("AssetBundleManifest没有找到");
 
             // 构建AddressMap 索引
-            //if (addressMap == null)
-            //{
-            //    string addressMapPath = Path.Combine(_abRoot, "BundleConfig.json");
-            //    addressMap = LoadFromJson(addressMapPath);
-            //}
+            if (addressMap == null)
+            {
+                string addressMapPath = Path.Combine(_abRoot, "BundleConfig.json");
+                addressMap = LoadFromJson(addressMapPath);
+            }
 
-            //if (addressMap == null)
-            //    Debug.LogWarning("BundleConfig没有找到");
-            //else
-            //    addressMap.InitMap();
+            if (addressMap == null)
+                Debug.LogWarning("BundleConfig没有找到");
+            else
+                addressMap.InitMap();
         }
 
         public void InitSync(string manifestBundleName = "AssetBundles")
@@ -124,30 +123,30 @@ namespace ZAsset
                 Debug.LogError("AssetBundleManifest没有找到");
 
             // 构建AddressMap索引
-            //if (addressMap == null)
-            //{
-            //    string addressMapPath = Path.Combine(_abRoot, "BundleConfig.json");
-            //    addressMap = LoadFromJson(addressMapPath);
-            //}
+            if (addressMap == null)
+            {
+                string addressMapPath = Path.Combine(_abRoot, "BundleConfig.json");
+                addressMap = LoadFromJson(addressMapPath);
+            }
 
-            //if (addressMap == null)
-            //    Debug.LogWarning("BundleConfig没有找到");
-            //else
-            //    addressMap.InitMap();
+            if (addressMap == null)
+                Debug.LogWarning("BundleConfig没有找到");
+            else
+                addressMap.InitMap();
         }
 
-        //private BundleConfig LoadFromJson(string path)
-        //{
-        //    if (!File.Exists(path))
-        //    {
-        //        Debug.LogError($"BundleConfig.json 不存在: {path}");
-        //        return null;
-        //    }
-        //    string json = File.ReadAllText(path);
-        //    var map = BundleConfig.FromJson(json);
-        //    map.InitMap();
-        //    return map;
-        //}
+        private BundleConfig LoadFromJson(string path)
+        {
+            if (!File.Exists(path))
+            {
+                Debug.LogError($"BundleConfig.json 不存在: {path}");
+                return null;
+            }
+            string json = File.ReadAllText(path);
+            var map = BundleConfig.FromJson(json);
+            map.InitMap();
+            return map;
+        }
 
         #endregion
 
@@ -158,19 +157,16 @@ namespace ZAsset
         public async UniTask<AssetHandle<T>> LoadAsync<T>(string address,Action<AssetHandle<T>>onComplete = null)
             where T : UnityEngine.Object
         {
+            if (string.IsNullOrEmpty(address)) throw new ArgumentNullException(nameof(address));
+            if (addressMap == null || !addressMap.TryGet(address, out var rec))
+                throw new Exception($"没有找到地址：{address}");
 
-            var assetTag = BundlePathRuntime.GetAssetTag(address);
-            string bundleName = address;
-            if (assetTag == AssetTag.Common)
-            {
-                bundleName = "common";
-            }
 
             //先保证bundle及其依赖 已经加载，这一步是建立和bundle的链接
-            await LoadBundleWithDependenciesAsync(bundleName);
+            await LoadBundleWithDependenciesAsync(rec.bundleName);
 
             //加载资源解包
-            var ab = _bundles[bundleName].Bundle;
+            var ab = _bundles[rec.bundleName].Bundle;
             var asset = await ab.LoadAssetAsync<T>(address);//注意这里要用逻辑名加载 不能用物理路径 会找不到
 
             var realAsset = asset as T;
@@ -185,17 +181,15 @@ namespace ZAsset
         // 同步加载真正资源
         public AssetHandle<T> LoadSync<T>(string address) where T : UnityEngine.Object
         {
-            var assetTag = BundlePathRuntime.GetAssetTag(address);
-            string bundleName = address;
-            if (assetTag == AssetTag.Common)
-            {
-                bundleName = "common";
-            }        
+            if (string.IsNullOrEmpty(address)) throw new ArgumentNullException(nameof(address));
+            if (addressMap == null || !addressMap.TryGet(address, out var rec))
+                throw new Exception($"没有找到地址：{address}");
+
             // 加载bundle及其依赖，这一步是建立和bundle的链接
-            LoadBundleWithDependenciesSync(bundleName);
+            LoadBundleWithDependenciesSync(rec.bundleName);
 
             // 加载资源解包
-            var ab = _bundles[bundleName].Bundle;
+            var ab = _bundles[rec.bundleName].Bundle;
             var asset = ab.LoadAsset<T>(address);
 
             var realAsset = asset as T;
@@ -209,19 +203,20 @@ namespace ZAsset
         public void Release(string address)
         {
             //当对某个地址的引用为0时 尝试卸载bundle
-            //对bundle和其依赖计数减一
-            var assetTag = BundlePathRuntime.GetAssetTag(address);                 
-            switch (assetTag)
+            if (addressMap != null && addressMap.TryGet(address, out var rec))
             {
-                case AssetTag.Common: // 对公共资源，不卸载
-                    Debug.LogWarning(address + " 为公共资源， 不卸载");
-                    break;
-                default:
-                    //根据address引用和bundle引用的双重结果尝试卸载
-                    string bundleName = address;
-                    DecreaseBundleRef(bundleName);
-                    TryUnloadBundle(bundleName);
-                    break;
+                //对bundle和其依赖计数减一
+                DecreaseBundleRef(rec.bundleName);
+                switch (rec.assetTag)
+                {
+                    case AssetTag.Common: // 对公共资源，不卸载
+                        Debug.LogWarning(rec.bundleName + " 为公共资源， 不卸载");
+                        break;
+                    default:
+                        //根据address引用和bundle引用的双重结果尝试卸载
+                        TryUnloadBundle(rec.bundleName);
+                        break;
+                }
             }
 
         }
@@ -498,22 +493,6 @@ namespace ZAsset
             return deps;
         }
 
-        private enum AddressInfo
-        {
-            groupName,
-            bundleName,
-            resName
-        }
-       
-        private string GetResNameByAddress(string address)
-        {
-            if (string.IsNullOrEmpty(address)) throw new ArgumentNullException(nameof(address));
-            var split = address.Split('/');
-            if (split.Length < 2)
-                throw new Exception($"资源路径不合法，必须包含 bundle 名：{address}");         
-            string assetName = split[1];
-            return assetName;
-        }
     }
 }
 
