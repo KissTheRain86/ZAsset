@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using UnityEngine;
 using Cysharp.Threading.Tasks;
 
@@ -154,28 +155,63 @@ namespace ZAsset
 
         //这个是真正加载资源 解包的 不只是建立链接
         
-        public async UniTask<AssetHandle<T>> LoadAsync<T>(string address,Action<AssetHandle<T>>onComplete = null)
+        public async UniTask<AssetHandle<T>> LoadAsync<T>(
+            string address,
+            Action<AssetHandle<T>> onComplete = null,
+            CancellationToken cancellationToken = default,
+            TimeSpan? timeout = null)
             where T : UnityEngine.Object
         {
             if (string.IsNullOrEmpty(address)) throw new ArgumentNullException(nameof(address));
             if (addressMap == null || !addressMap.TryGet(address, out var rec))
                 throw new Exception($"没有找到地址：{address}");
 
+            cancellationToken.ThrowIfCancellationRequested();
 
-            //先保证bundle及其依赖 已经加载，这一步是建立和bundle的链接
-            await LoadBundleWithDependenciesAsync(rec.bundleName);
+            CancellationToken finalToken = cancellationToken;
+            CancellationTokenSource timeoutCts = null;
+            CancellationTokenSource linkedCts = null;
+            bool refsAcquired = false;
 
-            //加载资源解包
-            var ab = _bundles[rec.bundleName].Bundle;
-            var asset = await ab.LoadAssetAsync<T>(address);//注意这里要用逻辑名加载 不能用物理路径 会找不到
+            if (timeout.HasValue)
+            {
+                timeoutCts = new CancellationTokenSource(timeout.Value);
+                linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
+                finalToken = linkedCts.Token;
+            }
 
-            var realAsset = asset as T;
-            if (realAsset == null) throw new Exception($"资源加载失败: {address}");
-            var handle = ObjectPool.Instance.Pop<AssetHandle<T>>();
-            handle.Init(address, realAsset);
+            try
+            {
+                //先保证bundle及其依赖 已经加载，这一步是建立和bundle的链接
+                await LoadBundleWithDependenciesAsync(rec.bundleName);
+                refsAcquired = true;
 
-            onComplete?.Invoke(handle);
-            return handle;
+                //加载资源解包
+                var ab = _bundles[rec.bundleName].Bundle;
+                var assetRequest = ab.LoadAssetAsync<T>(address);//注意这里要用逻辑名加载 不能用物理路径 会找不到
+                await assetRequest.ToUniTask(cancellationToken: finalToken);
+
+                var realAsset = assetRequest.asset as T;
+                if (realAsset == null) throw new Exception($"资源加载失败: {address}");
+                var handle = ObjectPool.Instance.Pop<AssetHandle<T>>();
+                handle.Init(address, realAsset, rec.bundleName, rec.assetTag);
+
+                onComplete?.Invoke(handle);
+                return handle;
+            }
+            catch (OperationCanceledException)
+            {
+                if (refsAcquired)
+                {
+                    ReleaseBundleByContext(rec.bundleName, rec.assetTag);
+                }
+                throw;
+            }
+            finally
+            {
+                linkedCts?.Dispose();
+                timeoutCts?.Dispose();
+            }
         }
 
         // 同步加载真正资源
@@ -195,7 +231,7 @@ namespace ZAsset
             var realAsset = asset as T;
             if (realAsset == null) throw new Exception($"资源加载失败：{address}");
             var handle = ObjectPool.Instance.Pop<AssetHandle<T>>();
-            handle.Init(address, realAsset);
+            handle.Init(address, realAsset, rec.bundleName, rec.assetTag);
             return handle;
         }
 
@@ -205,20 +241,22 @@ namespace ZAsset
             //当对某个地址的引用为0时 尝试卸载bundle
             if (addressMap != null && addressMap.TryGet(address, out var rec))
             {
-                //对bundle和其依赖计数减一
-                DecreaseBundleRef(rec.bundleName);
-                switch (rec.assetTag)
-                {
-                    case AssetTag.Common: // 对公共资源，不卸载
-                        Debug.LogWarning(rec.bundleName + " 为公共资源， 不卸载");
-                        break;
-                    default:
-                        //根据address引用和bundle引用的双重结果尝试卸载
-                        TryUnloadBundle(rec.bundleName);
-                        break;
-                }
+                ReleaseBundleByContext(rec.bundleName, rec.assetTag);
             }
 
+        }
+
+        // 通过handle上下文释放，避免只靠address推导
+        public void Release(string address, string bundleName, AssetTag assetTag)
+        {
+            if (!string.IsNullOrEmpty(bundleName))
+            {
+                ReleaseBundleByContext(bundleName, assetTag);
+                return;
+            }
+
+            // 兼容旧调用方式（仅address）
+            Release(address);
         }
 
         //卸载所有无引用的bundle
@@ -395,6 +433,20 @@ namespace ZAsset
 
 
         #region bundle 卸载实现       
+        private void ReleaseBundleByContext(string bundleName, AssetTag assetTag)
+        {
+            DecreaseBundleRef(bundleName);
+            switch (assetTag)
+            {
+                case AssetTag.Common:
+                    Debug.LogWarning(bundleName + " 为公共资源， 不卸载");
+                    break;
+                default:
+                    TryUnloadBundle(bundleName);
+                    break;
+            }
+        }
+
         private void TryUnloadBundle(string bundleName)
         {
             //若引用计数<=0 则卸载 同时检查其依赖是否也可以卸载
