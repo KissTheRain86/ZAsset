@@ -7,7 +7,6 @@ namespace ZAsset
 {
     public class AssetHandle<T> : IRecycle, IDisposable where T : UnityEngine.Object
     {
-        private string _address;
         private string _bundleName;
         private AssetTag _assetTag;
         private T _asset;
@@ -19,14 +18,9 @@ namespace ZAsset
         {
         }
 
-        public AssetHandle(string address, T asset)
-        {
-            Init(address, asset, null, AssetTag.Default);
-        }
 
-        public void Init(string address, T asset, string bundleName, AssetTag assetTag)
+        public void Init( T asset, string bundleName, AssetTag assetTag)
         {
-            _address = address;
             _asset = asset;
             _bundleName = bundleName;
             _assetTag = assetTag;
@@ -37,9 +31,7 @@ namespace ZAsset
             if (_disposed) return;
             _disposed = true;
 
-            ResManager.Instance.Release(_address, _bundleName, _assetTag);
-
-            _address = null;
+            ResManager.Instance.Release(_bundleName, _assetTag);
             _bundleName = null;
             _asset = null;
 

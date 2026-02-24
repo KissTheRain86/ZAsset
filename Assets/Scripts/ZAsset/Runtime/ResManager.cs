@@ -147,7 +147,6 @@ namespace ZAsset
         
         public async UniTask<AssetHandle<T>> LoadAsync<T>(
             string address,
-            Action<AssetHandle<T>> onComplete = null,
             CancellationToken cancellationToken = default,
             TimeSpan? timeout = null)
             where T : UnityEngine.Object
@@ -184,9 +183,7 @@ namespace ZAsset
                 var realAsset = assetRequest.asset as T;
                 if (realAsset == null) throw new Exception($"资源加载失败: {address}");
                 var handle = ObjectPool.Instance.Pop<AssetHandle<T>>();
-                handle.Init(address, realAsset, rec.bundleName, rec.assetTag);
-
-                onComplete?.Invoke(handle);
+                handle.Init(realAsset, rec.bundleName, rec.assetTag);
                 return handle;
             }
             catch (OperationCanceledException)
@@ -221,7 +218,7 @@ namespace ZAsset
             var realAsset = asset as T;
             if (realAsset == null) throw new Exception($"资源加载失败：{address}");
             var handle = ObjectPool.Instance.Pop<AssetHandle<T>>();
-            handle.Init(address, realAsset, rec.bundleName, rec.assetTag);
+            handle.Init(realAsset, rec.bundleName, rec.assetTag);
             return handle;
         }
 
@@ -237,16 +234,15 @@ namespace ZAsset
         }
 
         // 通过handle上下文释放，避免只靠address推导
-        public void Release(string address, string bundleName, AssetTag assetTag)
+        public void Release(string bundleName, AssetTag assetTag)
         {
             if (!string.IsNullOrEmpty(bundleName))
             {
                 ReleaseBundleByContext(bundleName, assetTag);
-                return;
             }
 
             // 兼容旧调用方式（仅address）
-            Release(address);
+            //Release(address);
         }
 
         //卸载所有无引用的bundle
