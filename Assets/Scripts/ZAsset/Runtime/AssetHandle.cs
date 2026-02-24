@@ -33,6 +33,8 @@ namespace ZAsset
         {
             if(_disposed) return;
             _disposed = true;
+            _address = null;
+            _asset = null;
             ResManager.Instance.Release(_address);
             ObjectPool.Instance.Push<AssetHandle<T>>(this);
         }

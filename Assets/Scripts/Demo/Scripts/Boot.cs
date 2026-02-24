@@ -24,18 +24,18 @@ public class Boot : MonoBehaviour
         Debug.Log("开始加载游戏对象");
 
         //异步加载-回调
-        AssetHandle<GameObject> handle1 = default;
-        GameObject go1 = default;
-        ResManager.Instance.LoadAsync<GameObject>("SphereBlue", (handle) => {
-            handle1 = handle;
-            go1 = GameObject.Instantiate(handle1.Asset);
-            go1.transform.position = new Vector3(0, 0, 0);
-        });
+        //AssetHandle<GameObject> handle1 = default;
+        //GameObject go1 = default;
+        //ResManager.Instance.LoadAsync<GameObject>("SphereBlue", (handle) => {
+        //    handle1 = handle;
+        //    go1 = GameObject.Instantiate(handle1.Asset);
+        //    go1.transform.position = new Vector3(0, 0, 0);
+        //});
       
         //异步加载-await
-        var handle2 = await ResManager.Instance.LoadAsync<GameObject>("SphereGreen");
-        var go2 = GameObject.Instantiate(handle2.Asset);
-        go2.transform.position = new Vector3(3, 0, 0);
+        var handle = await ResManager.Instance.LoadAsync<GameObject>("SphereGreen");
+        var go = GameObject.Instantiate(handle.Asset);
+        go.transform.position = new Vector3(3, 0, 0);
 
         //同步加载
         var handle_sync = ResManager.Instance.LoadSync<GameObject>("TestCubeSync");
@@ -46,11 +46,11 @@ public class Boot : MonoBehaviour
 
 
         Debug.Log("释放游戏对象");
-        Destroy(go1);
-        Destroy(go2);
+ 
+        Destroy(go);
         Destroy(go_sync);
-        handle1.Dispose();
-        handle2.Dispose();
+
+        handle.Dispose();
         handle_sync.Dispose();
         var handle_sync2 = ResManager.Instance.LoadSync<GameObject>("TestCubeSync");
         var go_sync2 = GameObject.Instantiate(handle_sync2.Asset);

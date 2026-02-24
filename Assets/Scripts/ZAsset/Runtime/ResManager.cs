@@ -106,11 +106,6 @@ namespace ZAsset
                 string addressMapPath = Path.Combine(_abRoot, "BundleConfig.json");
                 addressMap = LoadFromJson(addressMapPath);
             }
-
-            if (addressMap == null)
-                Debug.LogWarning("BundleConfig没有找到");
-            else
-                addressMap.InitMap();
         }
 
         public void InitSync(string manifestBundleName = "AssetBundles")
@@ -128,11 +123,6 @@ namespace ZAsset
                 string addressMapPath = Path.Combine(_abRoot, "BundleConfig.json");
                 addressMap = LoadFromJson(addressMapPath);
             }
-
-            if (addressMap == null)
-                Debug.LogWarning("BundleConfig没有找到");
-            else
-                addressMap.InitMap();
         }
 
         private BundleConfig LoadFromJson(string path)
@@ -154,7 +144,7 @@ namespace ZAsset
 
         //这个是真正加载资源 解包的 不只是建立链接
         
-        public async UniTask<AssetHandle<T>> LoadAsync<T>(string address,Action<AssetHandle<T>>onComplete = null)
+        public async UniTask<AssetHandle<T>> LoadAsync<T>(string address)
             where T : UnityEngine.Object
         {
             if (string.IsNullOrEmpty(address)) throw new ArgumentNullException(nameof(address));
@@ -174,7 +164,6 @@ namespace ZAsset
             var handle = ObjectPool.Instance.Pop<AssetHandle<T>>();
             handle.Init(address, realAsset);
 
-            onComplete?.Invoke(handle);
             return handle;
         }
 
@@ -409,15 +398,15 @@ namespace ZAsset
             }
 
 
-            var deps = GetDeps(bundleName);
-            foreach (var d in deps)
+            var depBundles = GetDeps(bundleName);
+            foreach (var depBundle in depBundles)
             {
-                if (BundleRefCount(d) <= 0)
+                if (BundleRefCount(depBundle) <= 0)
                 {
-                    if (!_waitUnloadQueue.Contains(_bundles[bundleName]))
+                    if (!_waitUnloadQueue.Contains(_bundles[depBundle]))
                     {
                         // 引用计数为0的资源 加入待卸载队列
-                        _waitUnloadQueue.Enqueue(_bundles[bundleName]);
+                        _waitUnloadQueue.Enqueue(_bundles[depBundle]);
                     }
                     //UnloadBundle(d, false);
                 }
