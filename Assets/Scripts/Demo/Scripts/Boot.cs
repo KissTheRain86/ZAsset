@@ -23,10 +23,9 @@ public class Boot : MonoBehaviour
         go1.transform.position = new Vector3(0, 0, 0);
 
         // 异步加载-await + 取消令牌
-        using var cts = new CancellationTokenSource();
         var handle2 = await ResManager.Instance.LoadAsync<GameObject>(
             "SphereGreen",
-            cancellationToken: cts.Token,
+            cancellationToken: this.GetCancellationTokenOnDestroy(),
             timeout: TimeSpan.FromSeconds(10));
         var go2 = Instantiate(handle2.Asset);
         go2.transform.position = new Vector3(3, 0, 0);

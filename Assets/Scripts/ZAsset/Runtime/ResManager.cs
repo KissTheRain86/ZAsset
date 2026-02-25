@@ -4,6 +4,7 @@ using System.IO;
 using System.Threading;
 using UnityEngine;
 using Cysharp.Threading.Tasks;
+using System.Linq;
 
 namespace ZAsset
 {
@@ -29,7 +30,7 @@ namespace ZAsset
         private AssetBundleManifest _manifest;//由主包 main manifest bundle提供
         private string _abRoot;//运行时解析出的AB根目录
         private AssetBundle _manifestBundle;//用于加载manifest的bundle
-        private const float UNLOAD_CD = 20f; // 定时卸载队列中的bundle
+        private const float UNLOAD_CD = 5f; // 定时卸载队列中的bundle
 
         //bundleName -> AssetBundle + refCount 已经加载的ab
         private readonly Dictionary<string,BundleInfo> _bundles = new();
@@ -222,17 +223,6 @@ namespace ZAsset
             return handle;
         }
 
-        //释放某个地址的资源 引用计数维护
-        public void Release(string address)
-        {
-            //当对某个地址的引用为0时 尝试卸载bundle
-            if (addressMap != null && addressMap.TryGet(address, out var rec))
-            {
-                ReleaseBundleByContext(rec.bundleName, rec.assetTag);
-            }
-
-        }
-
         // 通过handle上下文释放，避免只靠address推导
         public void Release(string bundleName, AssetTag assetTag)
         {
@@ -289,10 +279,19 @@ namespace ZAsset
             //递归加载依赖项
             var deps = GetDeps(bundleName);
             
-            foreach (var dep in deps)
+            if(deps!=null && deps.Length > 0)
             {
-                await LoadBundleAsync(dep);
+                var tasks = new List<UniTask>(deps.Length);
+                foreach(var dep in deps)
+                {
+                    tasks.Add(LoadBundleAsync(dep));
+                }
+                await UniTask.WhenAll(tasks);
             }
+            //foreach (var dep in deps)
+            //{
+            //    await LoadBundleAsync(dep);
+            //}
             await LoadBundleAsync(bundleName);
         }
 
